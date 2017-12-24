@@ -1,0 +1,54 @@
+[package]
+name = "Advent Of Code"
+version = "0.1.0"
+authors = ["Wilfried Chauveau"]
+
+[[bin]]
+name = "day1"
+path = "src/day1.rs"
+
+[[bin]]
+name = "day1_2"
+path = "src/day1_2.rs"
+
+[[bin]]
+name = "day2"
+path = "src/day2.rs"
+
+[[bin]]
+name = "day2_2"
+path = "src/day2_2.rs"
+
+[[bin]]
+name = "day3"
+path = "src/day3.rs"
+
+[[bin]]
+name = "day3_2"
+path = "src/day3_2.rs"
+
+[[bin]]
+name = "day4"
+path = "src/day4.rs"
+
+[[bin]]
+name = "day4_2"
+path = "src/day4_2.rs"
+
+[[bin]]
+name = "day5"
+path = "src/day5.rs"
+
+[[bin]]
+name = "day5_2"
+path = "src/day5_2.rs"
+
+[[bin]]
+name = "day6"
+path = "src/day6.rs"
+
+[[bin]]
+name = "day6_2"
+path = "src/day6_2.rs"
+
+[dependencies]
