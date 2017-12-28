@@ -51,4 +51,67 @@ path = "src/day6.rs"
 name = "day6_2"
 path = "src/day6_2.rs"
 
+[[bin]]
+name = "day7"
+path = "src/day7.rs"
+
+[[bin]]
+name = "day7_2"
+path = "src/day7_2.rs"
+
+[[bin]]
+name = "day8"
+path = "src/day8.rs"
+
+[[bin]]
+name = "day8_2"
+path = "src/day8_2.rs"
+
+[[bin]]
+name = "day9"
+path = "src/day9.rs"
+
+[[bin]]
+name = "day9_2"
+path = "src/day9_2.rs"
+
+[[bin]]
+name = "day10"
+path = "src/day10.rs"
+
+[[bin]]
+name = "day10_2"
+path = "src/day10_2.rs"
+
+[[bin]]
+name = "day11"
+path = "src/day11.rs"
+
+[[bin]]
+name = "day12"
+path = "src/day12.rs"
+
+[[bin]]
+name = "day12_2"
+path = "src/day12_2.rs"
+
+[[bin]]
+name = "day13"
+path = "src/day13.rs"
+
+[[bin]]
+name = "day13_2"
+path = "src/day13_2.rs"
+
+[[bin]]
+name = "day14"
+path = "src/day14.rs"
+
+[[bin]]
+name = "day14_2"
+path = "src/day14_2.rs"
+
 [dependencies]
+regex = "0.2"
+nom = "^3.0.0"
+num = "^0.1.41"
