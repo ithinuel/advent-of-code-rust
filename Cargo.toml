@@ -163,6 +163,14 @@ path = "src/day20_2.rs"
 name = "day21"
 path = "src/day21.rs"
 
+[[bin]]
+name = "day22"
+path = "src/day22.rs"
+
+[[bin]]
+name = "day22_2"
+path = "src/day22_2.rs"
+
 [dependencies]
 regex = "0.2"
 nom = "^3.0.0"
