@@ -1,0 +1,172 @@
+[package]
+name = "AdventOfCode"
+version = "0.1.0"
+authors = ["Wilfried Chauveau"]
+
+[[bin]]
+name = "day1"
+path = "src/day1.rs"
+
+[[bin]]
+name = "day2"
+path = "src/day2.rs"
+
+[[bin]]
+name = "day2_2"
+path = "src/day2_2.rs"
+
+[[bin]]
+name = "day3"
+path = "src/day3.rs"
+
+[[bin]]
+name = "day3_2"
+path = "src/day3_2.rs"
+
+[[bin]]
+name = "day4"
+path = "src/day4.rs"
+
+[[bin]]
+name = "day4_2"
+path = "src/day4_2.rs"
+
+[[bin]]
+name = "day5"
+path = "src/day5.rs"
+
+[[bin]]
+name = "day5_2"
+path = "src/day5_2.rs"
+
+[[bin]]
+name = "day6"
+path = "src/day6.rs"
+
+[[bin]]
+name = "day6_2"
+path = "src/day6_2.rs"
+
+[[bin]]
+name = "day7"
+path = "src/day7.rs"
+
+[[bin]]
+name = "day7_2"
+path = "src/day7_2.rs"
+
+[[bin]]
+name = "day8"
+path = "src/day8.rs"
+
+[[bin]]
+name = "day8_2"
+path = "src/day8_2.rs"
+
+[[bin]]
+name = "day9"
+path = "src/day9.rs"
+
+[[bin]]
+name = "day9_2"
+path = "src/day9_2.rs"
+
+[[bin]]
+name = "day10"
+path = "src/day10.rs"
+
+[[bin]]
+name = "day10_2"
+path = "src/day10_2.rs"
+
+[[bin]]
+name = "day11"
+path = "src/day11.rs"
+
+[[bin]]
+name = "day12"
+path = "src/day12.rs"
+
+[[bin]]
+name = "day12_2"
+path = "src/day12_2.rs"
+
+[[bin]]
+name = "day13"
+path = "src/day13.rs"
+
+[[bin]]
+name = "day13_2"
+path = "src/day13_2.rs"
+
+[[bin]]
+name = "day14"
+path = "src/day14.rs"
+
+[[bin]]
+name = "day14_2"
+path = "src/day14_2.rs"
+
+[[bin]]
+name = "day15"
+path = "src/day15.rs"
+
+[[bin]]
+name = "day15_2"
+path = "src/day15_2.rs"
+
+[[bin]]
+name = "day16"
+path = "src/day16.rs"
+
+[[bin]]
+name = "day16_2"
+path = "src/day16_2.rs"
+
+[[bin]]
+name = "day17"
+path = "src/day17.rs"
+
+[[bin]]
+name = "day17_2"
+path = "src/day17_2.rs"
+
+[[bin]]
+name = "day18"
+path = "src/day18.rs"
+
+[[bin]]
+name = "day18_2"
+path = "src/day18_2.rs"
+
+[[bin]]
+name = "day19"
+path = "src/day19.rs"
+
+[[bin]]
+name = "day19_2"
+path = "src/day19_2.rs"
+
+[[bin]]
+name = "day20"
+path = "src/day20.rs"
+
+[[bin]]
+name = "day20_2"
+path = "src/day20_2.rs"
+
+[[bin]]
+name = "day21"
+path = "src/day21.rs"
+
+[[bin]]
+name = "day22"
+path = "src/day22.rs"
+
+[[bin]]
+name = "day22_2"
+path = "src/day22_2.rs"
+
+[dependencies]
+regex = "^1.4"
+nom = "^6"
