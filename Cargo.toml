@@ -23,13 +23,13 @@ path = "src/day3.rs"
 name = "day3_2"
 path = "src/day3_2.rs"
 
-#[[bin]]
-#name = "day4"
-#path = "src/day4.rs"
+[[bin]]
+name = "day4"
+path = "src/day4.rs"
 
-#[[bin]]
-#name = "day4_2"
-#path = "src/day4_2.rs"
+[[bin]]
+name = "day4_2"
+path = "src/day4_2.rs"
 
 #[[bin]]
 #name = "day5"
