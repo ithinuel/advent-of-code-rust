@@ -2,6 +2,7 @@
 name = "AdventOfCode"
 version = "0.1.0"
 authors = ["Wilfried Chauveau"]
+edition = "2018"
 
 [[bin]]
 name = "day1"
@@ -30,6 +31,14 @@ path = "src/day4.rs"
 [[bin]]
 name = "day4_2"
 path = "src/day4_2.rs"
+
+[[bin]]
+name = "day4_take2"
+path = "src/day4_take2.rs"
+
+[[bin]]
+name = "day4_2_take2"
+path = "src/day4_2_take2.rs"
 
 #[[bin]]
 #name = "day5"
@@ -169,4 +178,5 @@ path = "src/day4_2.rs"
 
 [dependencies]
 regex = "^1.4"
+itertools = "^0"
 nom = "^6"
