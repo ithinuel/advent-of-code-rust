@@ -15,7 +15,7 @@ fn main() {
 
     let result = (boarding_passes[0]..=boarding_passes[boarding_passes.len() - 1])
         .zip(boarding_passes.iter())
-        .find(|(expected, sead_id)| expected != *sead_id)
+        .find(|(expected, seat_id)| expected != *seat_id)
         .expect("input is not empty");
 
     println!("{:?}", result.0);
