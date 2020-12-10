@@ -12,12 +12,11 @@ fn main() {
 
     let mut edges = BTreeMap::new();
     adapters.iter().for_each(|&a| {
-        let neighbours = edges.entry(a).or_insert_with(|| Vec::new());
-        (1..4).for_each(|n| {
-            if adapters.binary_search(&(a + n)).is_ok() {
-                neighbours.push(a + n)
-            }
-        });
+        edges.entry(a).or_insert_with(|| Vec::new()).extend(
+            (1..4)
+                .map(|n| a + n)
+                .filter(|b| adapters.binary_search(&b).is_ok()),
+        );
     });
 
     // The input is a Directed Acyclic Graph
