@@ -80,13 +80,13 @@ path = "src/day9.rs"
 name = "day9_2"
 path = "src/day9_2.rs"
 
-#[[bin]]
-#name = "day10"
-#path = "src/day10.rs"
+[[bin]]
+name = "day10"
+path = "src/day10.rs"
 
-#[[bin]]
-#name = "day10_2"
-#path = "src/day10_2.rs"
+[[bin]]
+name = "day10_2"
+path = "src/day10_2.rs"
 
 #[[bin]]
 #name = "day11"
