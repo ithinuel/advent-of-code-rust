@@ -11,7 +11,7 @@ fn move_by(waypoint: &mut (isize, isize), dir: &str, distance: isize) {
 }
 
 fn rotate_by(waypoint: &mut (isize, isize), dir: isize) {
-    match dir % 360 {
+    match dir {
         0 => {}
         90 => *waypoint = (waypoint.1, -waypoint.0),
         180 => *waypoint = (-waypoint.0, -waypoint.1),
