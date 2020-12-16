@@ -52,13 +52,15 @@ fn main() {
 
     // prepare all rules for all fields
     let mut possible_mapping: Vec<_> = (0..my_ticket.len()).map(|_| rules.clone()).collect();
-    // for each valid ticket remove non-matching fields from possibilities
+    // for each ticket that have no fields matching at least one rule,for each field in those remove
+    // from the possible_mapping the rules that do not validate that field.
     other_tickets
         .iter()
         .filter(|ticket| {
             ticket
                 .iter()
                 .find(|v| {
+                    // find a field that matches no rules
                     !rules
                         .iter()
                         .any(|(_, (range_1, range_2))| range_1.contains(v) || range_2.contains(v))
