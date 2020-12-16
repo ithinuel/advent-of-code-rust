@@ -50,7 +50,9 @@ fn main() {
         })
         .expect("Invalid ticket format");
 
+    // prepare all rules for all fields
     let mut possible_mapping: Vec<_> = (0..my_ticket.len()).map(|_| rules.clone()).collect();
+    // for each valid ticket remove non-matching fields from possibilities
     other_tickets
         .iter()
         .filter(|ticket| {
@@ -70,6 +72,7 @@ fn main() {
             });
         });
 
+    // collapse findings
     loop {
         let found_mapping: HashSet<_> = possible_mapping
             .iter()
@@ -96,6 +99,10 @@ fn main() {
         }
     }
 
+    // at this stage we still may have fields with more that 1 possible rule but the input is
+    // guarateed to be enough
+
+    // compute result
     let part2: usize = possible_mapping
         .into_iter()
         .enumerate()
