@@ -51,7 +51,9 @@ fn main() {
         .expect("Invalid ticket format");
 
     // prepare all rules for all fields
-    let mut possible_mapping: Vec<_> = (0..my_ticket.len()).map(|_| rules.clone()).collect();
+    let mut possible_mapping: Vec<HashMap<_, _>> = (0..my_ticket.len())
+        .map(|_| rules.iter().collect())
+        .collect();
     // for each ticket that have no fields matching at least one rule,for each field in those remove
     // from the possible_mapping the rules that do not validate that field.
     other_tickets
@@ -78,13 +80,7 @@ fn main() {
     loop {
         let found_mapping: HashSet<_> = possible_mapping
             .iter()
-            .filter_map(|rules| {
-                if rules.len() == 1 {
-                    rules.iter().next().map(|(k, _)| k.clone())
-                } else {
-                    None
-                }
-            })
+            .filter_map(|rules| rules.iter().exactly_one().ok().map(|(&k, _)| k))
             .collect();
 
         let mut changed = false;
