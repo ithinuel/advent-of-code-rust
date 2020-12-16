@@ -5,3 +5,7 @@ Invoque a solution with :
 ```bash
 cat input.txt | cargo run --bin dayN
 ```
+
+## License
+
+[Apache 2.0](./LICENSE)
