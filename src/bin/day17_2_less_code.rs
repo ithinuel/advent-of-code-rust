@@ -1,9 +1,10 @@
 use itertools::Itertools;
-use std::collections::BTreeSet;
+use std::collections::HashMap;
+use std::collections::HashSet;
 use std::io::BufRead;
 
 fn main() {
-    let mut universe: BTreeSet<(isize, isize, isize, isize)> = std::io::stdin()
+    let mut universe: HashSet<(isize, isize, isize, isize)> = std::io::stdin()
         .lock()
         .lines()
         .filter_map(Result::ok)
@@ -25,28 +26,30 @@ fn main() {
 
     for _ in 0..6 {
         // for each active cube
-        universe = universe
+        let mut active_neighboors_count = HashMap::new();
+        universe
             .iter()
             // and their neighboors
             .flat_map(|(w, z, y, x)| {
                 cube.clone()
-                    .map(move |(dw, dz, dy, dx)| (w - dw, z + dz, y + dy, x + dx))
+                    .filter(|&(dw, dz, dy, dx)| !(dw == 0 && dz == 0 && dy == 0 && dx == 0))
+                    .map(move |(dw, dz, dy, dx)| (w + dw, z + dz, y + dy, x + dx))
             })
-            .unique() // has an hashset inside 🤷
-            .filter(|&(w, z, y, x)| {
-                let is_active = universe.contains(&(w, z, y, x));
+            .for_each(|pos| {
+                *active_neighboors_count.entry(pos).or_insert(0) += 1;
+            });
 
-                // count active neighboors
-                let count = cube
-                    .clone()
-                    .filter(|(dw, dz, dy, dx)| !(dw == &0 && dz == &0 && dy == &0 && dx == &0))
-                    .map(move |(dw, dz, dy, dx)| (w - dw, z + dz, y + dy, x + dx))
-                    .filter(|coords| universe.contains(coords))
-                    .count();
+        println!("{:?}", active_neighboors_count);
+
+        universe = active_neighboors_count
+            .into_iter()
+            .filter(|&((w, z, y, x), count)| {
+                let is_active = universe.contains(&(w, z, y, x));
 
                 // add to new_universe if needs to activate
                 (is_active && (count == 2 || count == 3)) || (!is_active && count == 3)
             })
+            .map(|(pos, _)| pos)
             .collect();
     }
 
