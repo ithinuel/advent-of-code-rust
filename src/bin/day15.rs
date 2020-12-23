@@ -24,11 +24,7 @@ fn main() {
         .filter_map(|v| v.parse().ok())
         .collect();
 
-    println!(
-        "{:?} {}",
-        starting_values,
-        play_n_round(&starting_values)
-    );
+    println!("{:?} {}", starting_values, play_n_round(&starting_values));
 }
 
 #[cfg(test)]
