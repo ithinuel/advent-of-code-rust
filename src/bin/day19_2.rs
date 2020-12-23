@@ -8,10 +8,8 @@ use nom::{
     sequence::{delimited, preceded, separated_pair, terminated, tuple},
     IResult,
 };
-use std::cell::RefCell;
 use std::collections::HashMap;
 use std::io::Read;
-use std::rc::Rc;
 
 // nom parser for the rules
 type SubRule = Vec<usize>;
@@ -47,48 +45,30 @@ fn parse_rule(input: &str) -> IResult<&str, (usize, Rule)> {
 
 fn into_nom_parser<'a>(
     rules: &'a HashMap<usize, Rule>,
-) -> Rc<RefCell<HashMap<usize, RefCell<Box<dyn FnMut(&str) -> IResult<&str, ()> + 'a>>>>> {
-    let rc_cache: Rc<RefCell<HashMap<_, RefCell<Box<dyn FnMut(&str) -> IResult<&str, ()> + 'a>>>>> =
-        Rc::new(RefCell::new(HashMap::new()));
-    rules.iter().for_each(|(&id, rule)| {
-        // some parser are too greedy… need to find an alternative
-        let rule: Box<dyn FnMut(&str) -> IResult<&str, ()>> = if [0, 8, 11].contains(&id) {
-            println!("Skiping {}", id);
-            return;
-        } else {
-            match rule {
-                Either::Left(ref s) => {
-                    let s: &str = s;
-                    Box::new(move |input| map(tag(s), |_| ())(input))
-                }
-                Either::Right((ref subrule, None)) => {
-                    let rc_cache = rc_cache.clone();
-                    Box::new(move |input| {
-                        subrule.iter().try_fold((input, ()), |(input, _), &id| {
-                            rc_cache.borrow()[&id].borrow_mut()(input)
-                        })
-                    })
-                }
-                Either::Right((ref subrule1, Some(ref subrule2))) => {
-                    let rc_cache = rc_cache.clone();
-                    Box::new(move |input| {
-                        subrule1
-                            .iter()
-                            .try_fold((input, ()), |(input, _), &id| {
-                                rc_cache.borrow()[&id].borrow_mut()(input)
-                            })
-                            .or_else(|_| {
-                                subrule2.iter().try_fold((input, ()), |(input, _), &id| {
-                                    rc_cache.borrow()[&id].borrow_mut()(input)
-                                })
-                            })
-                    })
-                }
-            }
-        };
-        rc_cache.borrow_mut().insert(id, RefCell::new(rule));
-    });
-    rc_cache
+    id: usize,
+) -> impl FnMut(&str) -> IResult<&str, ()> + 'a {
+    let rule = &rules[&id];
+    move |input| match rule {
+        Either::Left(ref s) => {
+            let s: &str = &s;
+            map(tag(s), |_| ())(input)
+        }
+        Either::Right((ref subrule, None)) => {
+            subrule.iter().try_fold((input, ()), |(input, _), &id| {
+                into_nom_parser(rules, id)(input)
+            })
+        }
+        Either::Right((ref subrule1, Some(ref subrule2))) => subrule1
+            .iter()
+            .try_fold((input, ()), |(input, _), &id| {
+                into_nom_parser(rules, id)(input)
+            })
+            .or_else(|_| {
+                subrule2.iter().try_fold((input, ()), |(input, _), &id| {
+                    into_nom_parser(rules, id)(input)
+                })
+            }),
+    }
 }
 
 fn main() {
@@ -105,58 +85,46 @@ fn main() {
         .map(|line| parse_rule(&line).expect("Invalid rule").1)
         .collect();
 
-    //let new_rule_8 = || Either::Right(([42].to_vec(), Some([42, 8].to_vec()))); // \g<42>+
-    //let new_rule_11 = || Either::Right(([42, 31].to_vec(), Some([42, 11, 31].to_vec()))); // not regex
-
-    //rules
-    //.entry(8)
-    //.and_modify(|rule| *rule = new_rule_8())
-    //.or_insert_with(new_rule_8);
-    //rules
-    //.entry(11)
-    //.and_modify(|rule| *rule = new_rule_11())
-    //.or_insert_with(new_rule_11);
-    let cache = into_nom_parser(&rules);
-
-    let rule0: Box<dyn FnMut(&str) -> IResult<&str, ()>> = {
-        let cache = cache.clone();
-        Box::new(move |input| {
-            // the only occurence of rule 8 and 11 are in rule 0 with 0: 8 11
-            // so we pack together rule 0, 8, and 11
-
-            let cache = cache.borrow();
-            let mut rule42 = cache[&42].borrow_mut();
-            let mut rule31 = cache[&31].borrow_mut();
-
-            // ungreedily try to parse 42 then (42 31)
-            for n in 1.. {
-                let (input, _) = count(&mut *rule42, n)(input)?;
-                let res =
-                    terminated(length_count(many1_count(&mut *rule42), &mut *rule31), eof)(input);
-                if res.is_ok() {
-                    return Ok(("", ()));
+    // assert the assummtion about rule 0, 8 and 11 is correct
+    let magic_rules = [0, 8, 11];
+    debug_assert_eq!(rules[&0], Either::Right(([8, 11].to_vec(), None)));
+    debug_assert!(!rules
+        .iter()
+        .filter(|(id, _)| !magic_rules.contains(id))
+        .any(|(_, rule)| {
+            match rule {
+                Either::Left(_) => false,
+                Either::Right((subrule, None)) => subrule.iter().any(|id| magic_rules.contains(id)),
+                Either::Right((subrule1, Some(subrule2))) => {
+                    subrule1.iter().any(|id| magic_rules.contains(id))
+                        || subrule2.iter().any(|id| magic_rules.contains(&id))
                 }
             }
-            unreachable!()
-        })
+        }));
+
+    // get parsers.
+    let mut rule42 = into_nom_parser(&rules, 42);
+    let mut rule31 = into_nom_parser(&rules, 31);
+    let mut rule0 = |input| -> IResult<&str, ()> {
+        // the only occurence of rule 8 and 11 are in rule 0 with 0: 8 11
+        // so we pack together rule 0, 8, and 11
+        // ungreedily try to parse 42 then (42 31)
+        for n in 1.. {
+            let (input, _) = count(&mut rule42, n)(input)?;
+            let res = terminated(length_count(many1_count(&mut rule42), &mut rule31), eof)(input);
+            if res.is_ok() {
+                return Ok(("", ()));
+            }
+        }
+        unreachable!()
     };
-    cache.borrow_mut().insert(0, RefCell::new(rule0));
 
-    println!("{:?}", cache.borrow().keys().collect::<Vec<_>>());
-
+    // apply the rules
     let match_count = input
         .next()
         .expect("Invalid input format")
         .lines()
-        .enumerate()
-        .filter(|(i, line)| {
-            print!("{}-{}:", i, line);
-            let cache = cache.borrow();
-            let mut rule0 = cache[&0].borrow_mut();
-            let res = rule0(&line).is_ok();
-            println!("{}", res);
-            res
-        })
+        .filter(|line| rule0(&line).is_ok())
         .count();
     println!("{:?}", match_count);
 }
