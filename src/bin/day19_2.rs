@@ -4,7 +4,7 @@ use nom::{
     bytes::complete::{tag, take, take_till},
     character::complete::{digit1, space1},
     combinator::{eof, map, map_res, opt},
-    multi::separated_list1,
+    multi::{count, length_count, many1_count, separated_list1},
     sequence::{delimited, preceded, separated_pair, terminated, tuple},
     IResult,
 };
@@ -52,47 +52,9 @@ fn into_nom_parser<'a>(
         Rc::new(RefCell::new(HashMap::new()));
     rules.iter().for_each(|(&id, rule)| {
         // some parser are too greedy… need to find an alternative
-        let rule: Box<dyn FnMut(&str) -> IResult<&str, ()>> = if id == 800 {
-            let rc_cache = rc_cache.clone();
-            Box::new(move |input| {
-                println!(" 8 (42+) {:?}", input);
-                let cache = rc_cache.borrow();
-                let mut f = cache[&42].borrow_mut();
-                let (mut input, ()) = (f)(input)?;
-                loop {
-                    input = match (f)(input) {
-                        Ok((new_input, ())) => new_input,
-                        Err(_) => break (Ok((input, ()))),
-                    };
-                    println!("{:?}", input);
-                }
-            })
-        } else if id == 11 {
-            let rc_cache = rc_cache.clone();
-            Box::new(move |input| {
-                println!("11 (42 (\\g<-1>) 31), {}", input);
-                let cache = rc_cache.borrow();
-                let mut count = 0;
-                // count opennings
-                let mut f = cache[&42].borrow_mut();
-                let (mut input, ()) = (f)(input)?;
-                loop {
-                    input = match (f)(input) {
-                        Ok((new_input, ())) => new_input,
-                        Err(_) => break,
-                    };
-                    count += 1;
-                }
-                println!("{}, {}", count, input);
-
-                let mut f = cache[&31].borrow_mut();
-                let (mut input, ()) = (f)(input)?;
-                for _ in 0..count {
-                    let (new_input, ()) = (f)(input)?;
-                    input = new_input;
-                }
-                Ok((input, ()))
-            })
+        let rule: Box<dyn FnMut(&str) -> IResult<&str, ()>> = if [0, 8, 11].contains(&id) {
+            println!("Skiping {}", id);
+            return;
         } else {
             match rule {
                 Either::Left(ref s) => {
@@ -156,6 +118,30 @@ fn main() {
     //.or_insert_with(new_rule_11);
     let cache = into_nom_parser(&rules);
 
+    let rule0: Box<dyn FnMut(&str) -> IResult<&str, ()>> = {
+        let cache = cache.clone();
+        Box::new(move |input| {
+            // the only occurence of rule 8 and 11 are in rule 0 with 0: 8 11
+            // so we pack together rule 0, 8, and 11
+
+            let cache = cache.borrow();
+            let mut rule42 = cache[&42].borrow_mut();
+            let mut rule31 = cache[&31].borrow_mut();
+
+            // ungreedily try to parse 42 then (42 31)
+            for n in 1.. {
+                let (input, _) = count(&mut *rule42, n)(input)?;
+                let res =
+                    terminated(length_count(many1_count(&mut *rule42), &mut *rule31), eof)(input);
+                if res.is_ok() {
+                    return Ok(("", ()));
+                }
+            }
+            unreachable!()
+        })
+    };
+    cache.borrow_mut().insert(0, RefCell::new(rule0));
+
     println!("{:?}", cache.borrow().keys().collect::<Vec<_>>());
 
     let match_count = input
@@ -167,8 +153,7 @@ fn main() {
             print!("{}-{}:", i, line);
             let cache = cache.borrow();
             let mut rule0 = cache[&0].borrow_mut();
-            let mut terminated = terminated(&mut *rule0, eof);
-            let res = terminated(*line).is_ok();
+            let res = rule0(&line).is_ok();
             println!("{}", res);
             res
         })
