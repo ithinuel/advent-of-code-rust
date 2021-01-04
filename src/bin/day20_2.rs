@@ -148,7 +148,8 @@ fn main() {
             let image: Vec<u32> = lines
                 .map(|line| {
                     line.chars()
-                        .fold(0, |acc, c| (acc << 1) | if c == '#' { 1 } else { 0 })
+                        .enumerate()
+                        .fold(0, |acc, (i, c)| acc | if c == '#' { 1 << i } else { 0 })
                 })
                 .collect();
 
@@ -249,11 +250,12 @@ fn main() {
         .flat_map(|ty| {
             (0..8).map(move |dy| {
                 (0..map_width)
+                    .rev()
                     .flat_map(|tx| {
                         let loc = ty * map_width + tx;
                         let ref_tile = &ref_map[loc];
 
-                        (0..8).map(move |dx| (ref_tile.image[1 + dy] >> (8 - dx)) & 1 == 1)
+                        (0..8).map(move |dx| (ref_tile.image[1 + dy] >> (1 + dx)) & 1 == 1)
                     })
                     .collect::<Vec<bool>>()
             })
