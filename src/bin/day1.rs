@@ -8,7 +8,7 @@ fn look_up(base: u32, data: &Vec<u32>) -> Option<u32> {
                 return false;
             }
             let b = base - a;
-            data.contains(&b)
+            data.binary_search(&b).is_ok()
         })
         .copied()
 }

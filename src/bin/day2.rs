@@ -11,15 +11,13 @@ fn main() {
         .filter_map(Result::ok)
         .filter(|s| re.is_match(&s))
         .flat_map(|s| {
-            re.captures_iter(&s)
-                .filter_map(|cap| {
-                    let min: usize = cap.get(1)?.as_str().parse().ok()?;
-                    let max = cap.get(2)?.as_str().parse().ok()?;
-                    let c: char = cap.get(3)?.as_str().parse().ok()?;
-                    let pwd: String = cap.get(4)?.as_str().into();
-                    Some((min..=max, c, pwd))
-                })
-                .next() // we only expect 1 match per line
+            re.captures_iter(&s).find_map(|cap| {
+                let min: usize = cap.get(1)?.as_str().parse().ok()?;
+                let max = cap.get(2)?.as_str().parse().ok()?;
+                let c: char = cap.get(3)?.as_str().parse().ok()?;
+                let pwd: String = cap.get(4)?.as_str().into();
+                Some((min..=max, c, pwd))
+            }) // we only expect 1 match per line
         })
         .filter(|(range, ch, pwd)| {
             let occurences = pwd.chars().filter(|c| c == ch).count();
