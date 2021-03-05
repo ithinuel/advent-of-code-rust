@@ -1,7 +1,7 @@
 use std::io::stdin;
 use std::io::BufRead;
 
-fn look_up(base: u32, data: &Vec<u32>) -> Option<u32> {
+fn look_up(base: u32, data: &[u32]) -> Option<u32> {
     data.iter()
         .find(|&a| {
             if base < *a {
@@ -22,7 +22,7 @@ fn main() {
         .filter_map(|s| s.parse().ok())
         .collect();
 
-    data.sort();
+    data.sort_unstable();
     if let Some(a) = look_up(2020, &data) {
         let b = 2020 - a;
         println!("{}*{}={}", a, b, a * b);
