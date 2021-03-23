@@ -1,12 +1,19 @@
+use std::{
+    collections::{HashMap, HashSet},
+    ops::RangeInclusive,
+};
+
+use aoc_runner_derive::*;
 use itertools::Itertools;
-use std::collections::HashMap;
-use std::collections::HashSet;
-use std::io::Read;
 
-fn main() {
-    let mut input = String::new();
-    std::io::stdin().read_to_string(&mut input).unwrap();
+type Input = (
+    HashMap<String, (RangeInclusive<usize>, RangeInclusive<usize>)>,
+    Vec<usize>,
+    Vec<Vec<usize>>,
+);
 
+#[aoc_generator(day16)]
+fn gen(input: &str) -> Input {
     let rules_regex = regex::Regex::new(r"^([^:]+): (\d+)-(\d+) or (\d+)-(\d+)$").unwrap();
 
     let mut blocks = input.split("\n\n");
@@ -31,7 +38,7 @@ fn main() {
             block
                 .lines()
                 .skip(1)
-                .flat_map(|line| line.split(","))
+                .flat_map(|line| line.split(','))
                 .map(|v| v.parse())
                 .try_collect()
                 .ok()
@@ -44,12 +51,33 @@ fn main() {
             block
                 .lines()
                 .skip(1)
-                .map(|line| line.split(",").map(|v| v.parse()).try_collect())
+                .map(|line| line.split(',').map(|v| v.parse()).try_collect())
                 .try_collect()
                 .ok()
         })
         .expect("Invalid ticket format");
+    (rules, my_ticket, other_tickets)
+}
 
+#[aoc(day16, part1)]
+fn part1((rules, _my_ticket, other_tickets): &Input) -> usize {
+    other_tickets
+        .iter()
+        .map(|ticket| {
+            ticket
+                .iter()
+                .filter(|v| {
+                    !rules
+                        .iter()
+                        .any(|(_, (range_1, range_2))| range_1.contains(v) || range_2.contains(v))
+                })
+                .sum::<usize>()
+        })
+        .sum()
+}
+
+#[aoc(day16, part2)]
+fn parte2((rules, my_ticket, other_tickets): &Input) -> usize {
     // prepare all rules for all fields
     let mut possible_mapping: Vec<HashMap<_, _>> = (0..my_ticket.len())
         .map(|_| rules.iter().collect())
@@ -101,12 +129,11 @@ fn main() {
     // guarateed to be enough
 
     // compute result
-    let part2: usize = possible_mapping
+    possible_mapping
         .into_iter()
         .enumerate()
         .filter_map(|(i, rules)| rules.into_iter().next().map(|(k, _)| (k, i)))
         .filter(|(k, _)| k.starts_with("departure"))
         .map(|(_, i)| my_ticket[i])
-        .product();
-    println!("{}", part2)
+        .product()
 }

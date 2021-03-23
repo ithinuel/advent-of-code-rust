@@ -1,21 +1,22 @@
-use std::io::BufRead;
+use anyhow::{anyhow, Result};
+use aoc_runner_derive::*;
 
-fn main() {
-    let (preamble_len, data): (usize, Vec<usize>) = {
-        let input = std::io::stdin();
-        let mut input = input.lock().lines().filter_map(Result::ok);
-        let preamble_len = input
-            .next()
-            .and_then(|s| s.parse().ok())
-            .expect("Invalid preamble length");
-        let data = input.filter_map(|s| s.parse().ok()).collect();
-        (preamble_len, data)
-    };
+#[aoc_generator(day9, part1)]
+fn gen_part1(input: &str) -> Result<(usize, Vec<usize>)> {
+    let mut input = input.lines();
+    let preamble_len = input
+        .next()
+        .and_then(|s| s.parse().ok())
+        .ok_or_else(|| anyhow!("Invalid preamble length"))?;
+    let data = input.filter_map(|s| s.parse().ok()).collect();
+    Ok((preamble_len, data))
+}
 
-    let part1 = data
-        .iter()
+#[aoc(day9, part1)]
+fn part1((preamble_len, data): &(usize, Vec<usize>)) -> Result<usize> {
+    data.iter()
         .enumerate()
-        .skip(preamble_len)
+        .skip(*preamble_len)
         .find(|&(i, &n)| {
             let allowed_values = &data[i - preamble_len..i];
             !allowed_values.iter().any(|&v| {
@@ -25,11 +26,19 @@ fn main() {
             })
         })
         .map(|(_, &v)| v)
-        .expect("Unable to find the invalid number");
+        .ok_or_else(|| anyhow!("Unable to find the invalid number"))
+}
 
-    println!("part1: {}", part1);
+#[aoc_generator(day9, part2)]
+fn gen_part2(input: &str) -> Result<(usize, Vec<usize>)> {
+    let part1_input = gen_part1(input)?;
+    let part1_result = part1(&part1_input)?;
+    Ok((part1_result, part1_input.1))
+}
 
-    let part2 = (0..data.len())
+#[aoc(day9, part2)]
+fn part2(&(part1, ref data): &(usize, Vec<usize>)) -> Result<usize> {
+    (0..data.len())
         .into_iter()
         .find_map(|base| {
             let end = data
@@ -54,6 +63,5 @@ fn main() {
                 });
             Some(min + max)
         })
-        .expect("Unable to find the encryption weakness");
-    println!("part2: {}", part2);
+        .ok_or_else(|| anyhow!("Unable to find the encryption weakness"))
 }

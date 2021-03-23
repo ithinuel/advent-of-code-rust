@@ -1,4 +1,4 @@
-use std::io::Read;
+use aoc_runner_derive::*;
 
 #[derive(Debug, Clone, Copy)]
 struct Borders {
@@ -22,11 +22,8 @@ fn flip(v: u32) -> u32 {
     (0..10).fold(0, |acc, i| (acc << 1) | ((v >> i) & 1))
 }
 
-fn main() {
-    let mut input = String::new();
-    std::io::stdin()
-        .read_to_string(&mut input)
-        .expect("Failed to read from stdin");
+#[aoc(day20, part1)]
+fn part1(input: &str) -> u64 {
     let map: Vec<(_, Borders, _)> = input
         .split("\n\n")
         .map(|tile| {
@@ -154,12 +151,19 @@ fn main() {
             )
         })
         .collect();
-    println!(
-        "{:?}",
-        possible_match
-            .iter()
-            .filter(|(_, n)| n == &2)
-            .map(|(id, _)| *id as u64)
-            .product::<u64>()
-    );
+    possible_match
+        .iter()
+        .filter(|(_, n)| n == &2)
+        .map(|(id, _)| *id as u64)
+        .product()
+}
+
+#[cfg(test)]
+mod test {
+    const TEST: &str = include_str!("../test20.txt");
+
+    #[test]
+    fn test_part1() {
+        assert_eq!(20899048083289, super::part1(TEST));
+    }
 }

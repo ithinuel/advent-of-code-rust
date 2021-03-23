@@ -1,12 +1,31 @@
-use itertools::Itertools;
 use std::collections::HashSet;
-use std::io::BufRead;
 
-fn main() {
-    let result: usize = std::io::stdin()
-        .lock()
+use aoc_runner_derive::*;
+use itertools::Itertools;
+
+#[aoc(day6, part1)]
+fn part1(input: &str) -> usize {
+    input
         .lines()
-        .filter_map(Result::ok)
+        .batching(|lines| {
+            let mut set = HashSet::new();
+            for line in lines {
+                if line.is_empty() {
+                    return Some(set);
+                } else {
+                    set.extend(line.chars());
+                }
+            }
+            None
+        })
+        .map(|group| group.len())
+        .sum()
+}
+
+#[aoc(day6, part2)]
+fn part2(input: &str) -> usize {
+    input
+        .lines()
         .batching(|lines| {
             let mut intersect = None;
 
@@ -26,6 +45,5 @@ fn main() {
             None
         })
         .map(|group| group.len())
-        .sum();
-    println!("{}", result);
+        .sum()
 }
