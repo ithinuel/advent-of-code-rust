@@ -31,3 +31,20 @@ fn part2(input: &str) -> usize {
         .expect("input is empty")
         .0
 }
+
+#[cfg(test)]
+mod test {
+    const EXAMPLE: [(&str, usize); 4] = [
+        ("FBFBBFFRLR", 357),
+        ("BFFFBBFRRR", 567),
+        ("FFFBBBFRRR", 119),
+        ("BBFFBBFRLL", 820),
+    ];
+
+    #[test]
+    fn part1() {
+        for &(input, expected) in EXAMPLE.iter() {
+            assert_eq!(expected, super::part1(input));
+        }
+    }
+}

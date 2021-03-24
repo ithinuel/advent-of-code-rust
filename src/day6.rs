@@ -16,7 +16,11 @@ fn part1(input: &str) -> usize {
                     set.extend(line.chars());
                 }
             }
-            None
+            if set.is_empty() {
+                None
+            } else {
+                Some(set)
+            }
         })
         .map(|group| group.len())
         .sum()
@@ -31,19 +35,48 @@ fn part2(input: &str) -> usize {
 
             for line in lines {
                 if line.is_empty() {
-                    return intersect;
-                } else {
-                    let line: HashSet<_> = line.chars().collect();
+                    break;
+                }
 
-                    if let Some(intersect) = intersect.as_mut() {
-                        *intersect = &*intersect & &line;
-                    } else {
-                        intersect = Some(line);
-                    }
+                let line: HashSet<_> = line.chars().collect();
+
+                if let Some(intersect) = intersect.as_mut() {
+                    *intersect = &*intersect & &line;
+                } else {
+                    intersect = Some(line);
                 }
             }
-            None
+            intersect
         })
         .map(|group| group.len())
         .sum()
+}
+
+#[cfg(test)]
+mod test {
+    const EXAMPLE: &str = r"abc
+
+a
+b
+c
+
+ab
+ac
+
+a
+a
+a
+a
+
+b";
+
+    #[test]
+    fn part1() {
+        assert_eq!(11, super::part1(EXAMPLE));
+    }
+
+    #[test]
+    fn part2() {
+        assert_eq!(6, super::part2(EXAMPLE));
+    }
 }

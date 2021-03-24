@@ -38,3 +38,25 @@ fn part2(input: &[u32]) -> Option<u32> {
     }
     None
 }
+
+#[cfg(test)]
+mod test {
+    use super::{gen, part1 as solve_part1, part2 as solve_part2};
+
+    const EXAMPLE: &str = r"1721
+979
+366
+299
+675
+1456";
+
+    #[test]
+    fn part1() {
+        assert_eq!(Some(514579), solve_part1(&gen(EXAMPLE)));
+    }
+
+    #[test]
+    fn part2() {
+        assert_eq!(Some(241861950), solve_part2(&gen(EXAMPLE)));
+    }
+}

@@ -1,10 +1,10 @@
 use aoc_runner_derive::*;
 use itertools::Itertools;
 
-fn compute_part1(line: &mut impl Iterator<Item = u8>) -> isize {
+fn recursive(line: &mut impl Iterator<Item = u8>) -> isize {
     // ( or operand
     let mut acc = match line.next() {
-        Some(b'(') => compute_part1(line),
+        Some(b'(') => recursive(line),
         Some(b) if (b'0'..=b'9').contains(&b) => (b - b'0') as isize,
         _ => unreachable!(),
     };
@@ -16,15 +16,15 @@ fn compute_part1(line: &mut impl Iterator<Item = u8>) -> isize {
         };
         // ( or operand
         let operand = match line.next() {
-            Some(b'(') => compute_part1(line),
+            Some(b'(') => recursive(line),
             Some(b) if (b'0'..=b'9').contains(&b) => (b - b'0') as isize,
             _ => unreachable!(),
         };
         match operator {
             b'+' => acc += operand,
-            b'-' => acc -= operand,
+            //b'-' => acc -= operand,
             b'*' => acc *= operand,
-            b'/' => acc /= operand,
+            //b'/' => acc /= operand,
             _ => unreachable!(),
         }
     }
@@ -34,11 +34,11 @@ fn compute_part1(line: &mut impl Iterator<Item = u8>) -> isize {
 fn part1(input: &str) -> isize {
     input
         .lines()
-        .map(|s| compute_part1(&mut s.bytes().filter(|&b| b != b' ')))
+        .map(|s| recursive(&mut s.bytes().filter(|&b| b != b' ')))
         .sum()
 }
 
-fn compute_part2(line: &mut impl Iterator<Item = u8>) -> usize {
+fn iterative(line: &mut impl Iterator<Item = u8>) -> isize {
     let mut postfix = Vec::new();
     let mut stack = Vec::new();
 
@@ -50,7 +50,7 @@ fn compute_part2(line: &mut impl Iterator<Item = u8>) -> usize {
             _ => unreachable!(),
         }
     }
-    fn colapse(postfix: &mut Vec<usize>, op: u8) {
+    fn colapse(postfix: &mut Vec<isize>, op: u8) {
         let operand1 = postfix.pop().expect("Invalid expression");
         let operand2 = postfix.pop().expect("Invalid expression");
         let result = match op {
@@ -72,7 +72,7 @@ fn compute_part2(line: &mut impl Iterator<Item = u8>) -> usize {
                     colapse(&mut postfix, b);
                 }
             }
-            b @ b'0'..=b'9' => postfix.push((b - b'0') as usize),
+            b @ b'0'..=b'9' => postfix.push((b - b'0') as isize),
             b @ b'*' | b @ b'+' => {
                 // b is an operator
                 while let Some(top) = stack.pop() {
@@ -84,7 +84,9 @@ fn compute_part2(line: &mut impl Iterator<Item = u8>) -> usize {
                 }
                 stack.push(b)
             }
-            _ => unreachable!(),
+            _ => {}
+            //b if b.is_ascii_whitespace() => {}
+            //b => unreachable!("unexpected: {}", b),
         }
     });
     stack
@@ -98,121 +100,79 @@ fn compute_part2(line: &mut impl Iterator<Item = u8>) -> usize {
 }
 
 #[aoc(day18, part2)]
-fn part2(input: &str) -> usize {
-    input
-        .lines()
-        .map(|s| compute_part2(&mut s.bytes().filter(|&b| b != b' ')))
-        .sum()
+fn part2(input: &str) -> isize {
+    input.lines().map(|s| iterative(&mut s.bytes())).sum()
 }
 
 #[cfg(test)]
-mod test_part1 {
-    use super::compute_part1;
+mod test_recursive {
+    use super::recursive;
+
+    const EXAMPLES: [(isize, &[u8]); 6] = [
+        (71, b"1 + 2 * 3 + 4 * 5 + 6"),
+        (51, b"1 + (2 * 3) + (4 * (5 + 6))"),
+        (26, b"2 * 3 + (4 * 5)"),
+        (437, b"5 + (8 * 3 + 9 + 3 * 4 * 3)"),
+        (12240, b"5 * 9 * (7 * 3 * 3 + 9 * 3 + (8 + 6 * 4))"),
+        (13632, b"((2 + 4 * 9) * (6 + 9 * 8 + 6) + 6) + 2 + 4 * 2"),
+    ];
+
     #[test]
     fn one_operand() {
         let input = b"1";
-        assert_eq!(compute_part1(&mut input.iter().copied()), 1);
+        assert_eq!(
+            recursive(&mut input.iter().copied().filter(|b| !b.is_ascii_whitespace())),
+            1
+        );
     }
     #[test]
     fn addition() {
         let input = b"1+2";
-        assert_eq!(compute_part1(&mut input.iter().copied()), 3);
+        assert_eq!(
+            recursive(&mut input.iter().copied().filter(|b| !b.is_ascii_whitespace())),
+            3
+        );
     }
 
     #[test]
-    fn example1() {
-        let input = b"1 + 2 * 3 + 4 * 5 + 6";
-        assert_eq!(
-            compute_part1(&mut input.iter().copied().filter(|&b| b != b' ')),
-            71
-        );
-    }
-    #[test]
-    fn example2() {
-        let input = b"2 * 3 + (4 * 5)";
-        assert_eq!(
-            compute_part1(&mut input.iter().copied().filter(|&b| b != b' ')),
-            26
-        );
-    }
-    #[test]
-    fn example3() {
-        let input = b"5 + (8 * 3 + 9 + 3 * 4 * 3)";
-        assert_eq!(
-            compute_part1(&mut input.iter().copied().filter(|&b| b != b' ')),
-            437
-        );
-    }
-    #[test]
-    fn example4() {
-        let input = b"5 * 9 * (7 * 3 * 3 + 9 * 3 + (8 + 6 * 4))";
-        assert_eq!(
-            compute_part1(&mut input.iter().copied().filter(|&b| b != b' ')),
-            12240
-        );
-    }
-    #[test]
-    fn example5() {
-        let input = b"((2 + 4 * 9) * (6 + 9 * 8 + 6) + 6) + 2 + 4 * 2";
-        assert_eq!(
-            compute_part1(&mut input.iter().copied().filter(|&b| b != b' ')),
-            13632
-        );
+    fn examples() {
+        for &(expected, input) in EXAMPLES.iter() {
+            assert_eq!(
+                expected,
+                recursive(&mut input.iter().copied().filter(|b| !b.is_ascii_whitespace()))
+            );
+        }
     }
 }
 
 #[cfg(test)]
-mod test_part2 {
-    use super::compute_part2;
+mod test_interative {
+    use super::iterative;
+
+    const EXAMPLES: [(isize, &[u8]); 6] = [
+        (231, b"1 + 2 * 3 + 4 * 5 + 6"),
+        (51, b"1 + (2 * 3) + (4 * (5 + 6))"),
+        (46, b"2 * 3 + (4 * 5)"),
+        (1445, b"5 + (8 * 3 + 9 + 3 * 4 * 3)"),
+        (669060, b"5 * 9 * (7 * 3 * 3 + 9 * 3 + (8 + 6 * 4))"),
+        (23340, b"((2 + 4 * 9) * (6 + 9 * 8 + 6) + 6) + 2 + 4 * 2"),
+    ];
+
     #[test]
     fn one_operand() {
         let input = b"1";
-        assert_eq!(compute_part2(&mut input.iter().copied()), 1);
+        assert_eq!(iterative(&mut input.iter().copied()), 1);
     }
     #[test]
     fn addition() {
         let input = b"1+2";
-        assert_eq!(compute_part2(&mut input.iter().copied()), 3);
+        assert_eq!(iterative(&mut input.iter().copied()), 3);
     }
 
     #[test]
-    fn example1() {
-        let input = b"1 + 2 * 3 + 4 * 5 + 6";
-        assert_eq!(
-            compute_part2(&mut input.iter().copied().filter(|&b| b != b' ')),
-            231
-        );
-    }
-    #[test]
-    fn example2() {
-        let input = b"2 * 3 + (4 * 5)";
-        assert_eq!(
-            compute_part2(&mut input.iter().copied().filter(|&b| b != b' ')),
-            46
-        );
-    }
-    #[test]
-    fn example3() {
-        let input = b"5 + (8 * 3 + 9 + 3 * 4 * 3)";
-        assert_eq!(
-            compute_part2(&mut input.iter().copied().filter(|&b| b != b' ')),
-            1445
-        );
-    }
-    #[test]
-    fn example4() {
-        let input = b"5 * 9 * (7 * 3 * 3 + 9 * 3 + (8 + 6 * 4))";
-        assert_eq!(
-            compute_part2(&mut input.iter().copied().filter(|&b| b != b' ')),
-            669060
-        );
-    }
-    #[test]
-    fn example5() {
-        let input = b"((2 + 4 * 9) * (6 + 9 * 8 + 6) + 6) + 2 + 4 * 2";
-        assert_eq!(
-            compute_part2(&mut input.iter().copied().filter(|&b| b != b' ')),
-            23340
-        );
+    fn examples() {
+        for &(expected, input) in EXAMPLES.iter() {
+            assert_eq!(expected, iterative(&mut input.iter().copied()));
+        }
     }
 }
