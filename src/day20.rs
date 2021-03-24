@@ -1,30 +1,58 @@
+use std::collections::HashMap;
+
 use aoc_runner_derive::*;
+use bitvec::prelude::*;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 struct Borders {
-    top: u32,
-    right: u32,
-    bottom: u32,
-    left: u32,
+    top: BitVec,
+    right: BitVec,
+    bottom: BitVec,
+    left: BitVec,
 }
+impl Borders {
+    fn rotate_ccw90(&mut self) {
+        self.bottom.reverse();
+        self.top.reverse();
+        std::mem::swap(&mut self.top, &mut self.right); // top has right, right has top
+        std::mem::swap(&mut self.left, &mut self.right); // left has top, right has left
+        std::mem::swap(&mut self.bottom, &mut self.right); // bottom has left, right has bottom
+    }
 
-impl From<(u32, u32, u32, u32)> for Borders {
-    fn from(v: (u32, u32, u32, u32)) -> Self {
-        Borders {
-            top: v.0,
-            right: v.1,
-            bottom: v.2,
-            left: v.3,
-        }
+    fn vertical_flip(&mut self) {
+        self.left.reverse();
+        self.right.reverse();
+        std::mem::swap(&mut self.top, &mut self.bottom);
     }
 }
-fn flip(v: u32) -> u32 {
-    (0..10).fold(0, |acc, i| (acc << 1) | ((v >> i) & 1))
+
+type Tile = Vec<BitVec>;
+// Possible transformation are composition of Rotation by 0, 90, 180 or 270° and possibly a
+// Vertical Flip (two flip cancel each other and H+V flip are equivalent to a 180° rotation),
+#[allow(clippy::upper_case_acronyms)]
+#[derive(Debug, Clone, Copy)]
+enum Rotation {
+    None,
+    CCW90,
+    CCW180,
+    CW90,
+}
+#[derive(Debug, Clone, Copy)]
+enum Position {
+    Top,
+    Right,
+    Left,
+    Bottom,
+}
+#[derive(Debug, Clone, Copy)]
+enum Flip {
+    None,
+    Vertical,
 }
 
-#[aoc(day20, part1)]
-fn part1(input: &str) -> u64 {
-    let map: Vec<(_, Borders, _)> = input
+#[aoc_generator(day20)]
+fn gen(input: &str) -> HashMap<u32, Tile> {
+    input
         .split("\n\n")
         .map(|tile| {
             let mut lines = tile.lines();
@@ -32,131 +60,91 @@ fn part1(input: &str) -> u64 {
                 .next()
                 .and_then(|line| line[5..9].parse().ok())
                 .expect("Invalid tile number");
-            let image: Vec<u32> = lines
-                .map(|line| {
-                    line.chars()
-                        .fold(0, |acc, c| (acc << 1) | if c == '#' { 1 } else { 0 })
-                })
+
+            let image: Vec<BitVec> = lines
+                .map(|line| line.chars().map(|c| c == '#').collect())
                 .collect();
 
-            let top = image[0];
-            let left = (0..10).fold(0, |acc, i| acc | ((image[i] & 0b10_0000_0000) >> (9 - i)));
-            let bottom = image[9];
-            let right = (0..10).fold(0, |acc, i| acc | ((image[i] & 1) << i));
-
-            // precompute transformations
-            (id, (top, right, bottom, left).into(), image)
+            (id, image)
         })
-        .collect();
+        .collect()
+}
 
-    // Possible transformation are composition of Rotation by 0, 90, 180 or 270° and possibly a
-    // Vertical Flip (two flip cancel each other and H+V flip are equivalent to a 180° rotation),
-    #[allow(clippy::upper_case_acronyms)]
-    #[derive(Debug, Clone, Copy)]
-    enum Rotation {
-        None,
-        CCW90,
-        CCW180,
-        CW90,
-    }
-    #[derive(Debug, Clone, Copy)]
-    enum Position {
-        Top,
-        Right,
-        Left,
-        Bottom,
-    }
-    #[derive(Debug, Clone, Copy)]
-    enum Flip {
-        None,
-        Vertical,
-    }
-    //
-    let possible_match: Vec<_> = map
+fn rebuild_map(map: &HashMap<u32, Tile>) -> HashMap<u32, HashMap<u32, (Position, Rotation, Flip)>> {
+    let signatures: Vec<_> = map
         .iter()
-        .map(|(id, borders, _)| {
+        .map(|(id, tile)| {
             (
                 *id,
-                map.iter()
-                    .filter(|(id2, _, _)| id != id2)
-                    .filter_map(|(id2, borders2, _)| {
-                        if borders.top == borders2.bottom {
-                            Some((id2, Position::Top, Rotation::None, Flip::None))
-                        } else if borders.top == flip(borders2.left) {
-                            Some((id2, Position::Top, Rotation::CCW90, Flip::None))
-                        } else if borders.top == flip(borders2.top) {
-                            Some((id2, Position::Top, Rotation::CCW180, Flip::None))
-                        } else if borders.top == borders2.right {
-                            Some((id2, Position::Top, Rotation::CW90, Flip::None))
-                        } else if borders.top == flip(borders2.bottom) {
-                            Some((id2, Position::Top, Rotation::None, Flip::Vertical))
-                        } else if borders.top == borders2.left {
-                            Some((id2, Position::Top, Rotation::CCW90, Flip::Vertical))
-                        } else if borders.top == borders2.top {
-                            Some((id2, Position::Top, Rotation::CCW180, Flip::Vertical))
-                        } else if borders.top == flip(borders2.right) {
-                            Some((id2, Position::Top, Rotation::CW90, Flip::Vertical))
-                        } else if borders.right == borders2.left {
-                            Some((id2, Position::Right, Rotation::None, Flip::None))
-                        } else if borders.right == borders2.top {
-                            Some((id2, Position::Right, Rotation::CCW90, Flip::None))
-                        } else if borders.right == flip(borders2.right) {
-                            Some((id2, Position::Right, Rotation::CCW180, Flip::None))
-                        } else if borders.right == flip(borders2.bottom) {
-                            Some((id2, Position::Right, Rotation::CW90, Flip::None))
-                        } else if borders.right == flip(borders2.left) {
-                            Some((id2, Position::Right, Rotation::None, Flip::Vertical))
-                        } else if borders.right == flip(borders2.top) {
-                            Some((id2, Position::Right, Rotation::CCW90, Flip::Vertical))
-                        } else if borders.right == borders2.right {
-                            Some((id2, Position::Right, Rotation::CCW180, Flip::Vertical))
-                        } else if borders.right == borders2.bottom {
-                            Some((id2, Position::Right, Rotation::CW90, Flip::Vertical))
-                        } else if borders.bottom == borders2.top {
-                            Some((id2, Position::Bottom, Rotation::None, Flip::None))
-                        } else if borders.bottom == flip(borders2.right) {
-                            Some((id2, Position::Bottom, Rotation::CCW90, Flip::None))
-                        } else if borders.bottom == flip(borders2.bottom) {
-                            Some((id2, Position::Bottom, Rotation::CCW180, Flip::None))
-                        } else if borders.bottom == borders2.left {
-                            Some((id2, Position::Bottom, Rotation::CW90, Flip::None))
-                        } else if borders.bottom == flip(borders2.top) {
-                            Some((id2, Position::Bottom, Rotation::None, Flip::Vertical))
-                        } else if borders.bottom == borders2.right {
-                            Some((id2, Position::Bottom, Rotation::CCW90, Flip::Vertical))
-                        } else if borders.bottom == borders2.bottom {
-                            Some((id2, Position::Bottom, Rotation::CCW180, Flip::Vertical))
-                        } else if borders.bottom == flip(borders2.left) {
-                            Some((id2, Position::Bottom, Rotation::CW90, Flip::Vertical))
-                        } else if borders.left == borders2.right {
-                            Some((id2, Position::Left, Rotation::None, Flip::None))
-                        } else if borders.left == flip(borders2.top) {
-                            Some((id2, Position::Left, Rotation::CCW90, Flip::None))
-                        } else if borders.left == flip(borders2.left) {
-                            Some((id2, Position::Left, Rotation::CCW180, Flip::None))
-                        } else if borders.left == borders2.bottom {
-                            Some((id2, Position::Left, Rotation::CW90, Flip::None))
-                        } else if borders.left == flip(borders2.right) {
-                            Some((id2, Position::Left, Rotation::None, Flip::Vertical))
-                        } else if borders.left == borders2.top {
-                            Some((id2, Position::Left, Rotation::CCW90, Flip::Vertical))
-                        } else if borders.left == borders2.left {
-                            Some((id2, Position::Left, Rotation::CCW180, Flip::Vertical))
-                        } else if borders.left == flip(borders2.bottom) {
-                            Some((id2, Position::Left, Rotation::CW90, Flip::Vertical))
-                        } else {
-                            None
-                        }
-                    })
-                    .count(),
+                Borders {
+                    top: tile.first().map(Clone::clone).unwrap(),
+                    left: tile.iter().filter_map(|l| l.last()).collect(),
+                    bottom: tile.last().map(Clone::clone).unwrap(),
+                    right: tile.iter().filter_map(|l| l.first()).collect(),
+                },
             )
         })
         .collect();
+
+    signatures
+        .iter()
+        .map(|(id, borders)| {
+            let neighboors = signatures
+                .iter()
+                .filter(|(id2, _)| id != id2)
+                .filter_map(|(id2, borders2)| {
+                    let mut borders2 = borders2.clone();
+                    let mut transform = None;
+
+                    for &f in &[Flip::None, Flip::Vertical] {
+                        for &r in &[
+                            Rotation::None,
+                            Rotation::CCW90,
+                            Rotation::CCW180,
+                            Rotation::CW90,
+                        ] {
+                            if borders.top == borders2.bottom {
+                                transform = Some((Position::Top, r, f));
+                            } else if borders.right == borders2.left {
+                                transform = Some((Position::Right, r, f))
+                            } else if borders.bottom == borders2.top {
+                                transform = Some((Position::Bottom, r, f))
+                            } else if borders.left == borders2.right {
+                                transform = Some((Position::Left, r, f))
+                            } else {
+                                borders2.rotate_ccw90();
+                                continue;
+                            }
+                            break;
+                        }
+                        borders2.vertical_flip();
+                    }
+
+                    transform.map(|t| (*id2, t))
+                })
+                .collect();
+
+            (*id, neighboors)
+        })
+        .collect()
+}
+
+#[aoc(day20, part1)]
+fn part1(map: &HashMap<u32, Tile>) -> u64 {
+    //
+    let possible_match = rebuild_map(map);
+    //println!("{:?}", possible_match);
     possible_match
         .iter()
-        .filter(|(_, n)| n == &2)
+        // the tiles with only two size mapped are the corners.
+        .filter(|(_, n)| n.len() == 2)
         .map(|(id, _)| *id as u64)
         .product()
+}
+
+#[aoc(day20, part2)]
+fn part2<T>(_input: T) -> usize {
+    unimplemented!()
 }
 
 #[cfg(test)]
@@ -165,6 +153,13 @@ mod test {
 
     #[test]
     fn part1() {
-        assert_eq!(20899048083289, super::part1(TEST));
+        let map = super::gen(TEST);
+        assert_eq!(1951 * 3079 * 2971 * 1171, super::part1(&map));
+    }
+
+    #[test]
+    fn part2() {
+        let map = super::gen(TEST);
+        assert_eq!(273, super::part2(&map));
     }
 }
