@@ -51,6 +51,7 @@ fn part1(input: &str) -> u64 {
 
     // Possible transformation are composition of Rotation by 0, 90, 180 or 270° and possibly a
     // Vertical Flip (two flip cancel each other and H+V flip are equivalent to a 180° rotation),
+    #[allow(clippy::upper_case_acronyms)]
     #[derive(Debug, Clone, Copy)]
     enum Rotation {
         None,
@@ -163,7 +164,7 @@ mod test {
     const TEST: &str = include_str!("../test20.txt");
 
     #[test]
-    fn test_part1() {
+    fn part1() {
         assert_eq!(20899048083289, super::part1(TEST));
     }
 }
