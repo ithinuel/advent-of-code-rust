@@ -88,3 +88,58 @@ fn part2(rules: &RuleMap) -> usize {
     }
     leaves[&"shiny gold".to_string()]
 }
+
+#[cfg(test)]
+mod test {
+    const EXAMPLE: &str = r"light red bags contain 1 bright white bag, 2 muted yellow bags.
+dark orange bags contain 3 bright white bags, 4 muted yellow bags.
+bright white bags contain 1 shiny gold bag.
+muted yellow bags contain 2 shiny gold bags, 9 faded blue bags.
+shiny gold bags contain 1 dark olive bag, 2 vibrant plum bags.
+dark olive bags contain 3 faded blue bags, 4 dotted black bags.
+vibrant plum bags contain 5 faded blue bags, 6 dotted black bags.
+faded blue bags contain no other bags.
+dotted black bags contain no other bags.";
+
+    const EXAMPLE_AS_HASH: &[(&str, &[(&str, usize)])] = &[
+        ("dark orange", &[("bright white", 3), ("muted yellow", 4)]),
+        ("bright white", &[("shiny gold", 1)]),
+        ("shiny gold", &[("dark olive", 1), ("vibrant plum", 2)]),
+        ("dotted black", &[]),
+        ("faded blue", &[]),
+        ("light red", &[("bright white", 1), ("muted yellow", 2)]),
+        ("muted yellow", &[("faded blue", 9), ("shiny gold", 2)]),
+        ("dark olive", &[("dotted black", 4), ("faded blue", 3)]),
+        ("vibrant plum", &[("dotted black", 6), ("faded blue", 5)]),
+    ];
+
+    fn example_as_hash() -> super::RuleMap {
+        EXAMPLE_AS_HASH
+            .iter()
+            .map(|(id, v)| {
+                (
+                    id.to_string(),
+                    v.iter().map(|(id, v)| (id.to_string(), *v)).collect(),
+                )
+            })
+            .collect()
+    }
+
+    #[test]
+    fn generator() {
+        let example_as_hash = example_as_hash();
+        assert_eq!(Some(example_as_hash), super::gen(EXAMPLE).ok());
+    }
+
+    #[test]
+    fn part1() {
+        let example_as_hash = example_as_hash();
+        assert_eq!(4, super::part1(&example_as_hash));
+    }
+
+    #[test]
+    fn part2() {
+        let example_as_hash = example_as_hash();
+        assert_eq!(32, super::part2(&example_as_hash));
+    }
+}

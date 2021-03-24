@@ -1,6 +1,6 @@
 use aoc_runner_derive::*;
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 enum Inst {
     Acc(i32),
     Jmp(i32),
@@ -88,4 +88,45 @@ fn part2(program: &[Inst]) -> anyhow::Result<i32> {
         };
     }
     anyhow::bail!("No solution found");
+}
+
+#[cfg(test)]
+mod test {
+    use super::Inst;
+    const EXAMPLE: &str = r"nop +0
+acc +1
+jmp +4
+acc +3
+jmp -3
+acc -99
+acc +1
+jmp -4
+acc +6";
+
+    const EXAMPLE_AS_ARRAY: &[Inst] = &[
+        Inst::Nop(0),
+        Inst::Acc(1),
+        Inst::Jmp(4),
+        Inst::Acc(3),
+        Inst::Jmp(-3),
+        Inst::Acc(-99),
+        Inst::Acc(1),
+        Inst::Jmp(-4),
+        Inst::Acc(6),
+    ];
+
+    #[test]
+    fn generator() {
+        assert_eq!(EXAMPLE_AS_ARRAY, super::generator(EXAMPLE));
+    }
+
+    #[test]
+    fn part1() {
+        assert_eq!(5, super::part1(EXAMPLE_AS_ARRAY));
+    }
+
+    #[test]
+    fn part2() {
+        assert_eq!(Some(8), super::part2(EXAMPLE_AS_ARRAY).ok());
+    }
 }

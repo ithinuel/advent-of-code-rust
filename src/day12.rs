@@ -65,3 +65,22 @@ fn part2(input: &str) -> isize {
     });
     pos.0.abs() + pos.1.abs()
 }
+
+#[cfg(test)]
+mod test {
+    const EXAMPLE: &str = r"F10
+N3
+F7
+R90
+F11";
+
+    #[test]
+    fn part1() {
+        assert_eq!(17 + 8, super::part1(EXAMPLE));
+    }
+
+    #[test]
+    fn part2() {
+        assert_eq!(214 + 72, super::part2(EXAMPLE));
+    }
+}

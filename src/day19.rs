@@ -43,7 +43,7 @@ fn parse_rule(input: &str) -> IResult<&str, (usize, Rule)> {
 }
 
 #[aoc_generator(day19)]
-fn day19(input: &str) -> anyhow::Result<(String, HashMap<usize, Rule>)> {
+fn gen(input: &str) -> anyhow::Result<(String, HashMap<usize, Rule>)> {
     let mut input = input.split("\n\n");
     let invalid_format = || anyhow::anyhow!("Invalid input format");
 
@@ -165,4 +165,63 @@ fn part2((input, rules): &(String, HashMap<usize, Rule>)) -> usize {
 
     // apply the rules
     input.lines().filter(|line| rule0(&line).is_ok()).count()
+}
+
+#[cfg(test)]
+mod test {
+    use either::Either;
+    use lazy_static::lazy_static;
+    use std::collections::HashMap;
+
+    const EXAMPLE: &str = r#"0: 4 1 5
+1: 2 3 | 3 2
+2: 4 4 | 5 5
+3: 4 5 | 5 4
+4: "a"
+5: "b"
+
+ababbb
+bababa
+abbbab
+aaabbb
+aaaabbb"#;
+
+    const EXAMPLE_RULES: &[(usize, Either<&str, (&[usize], Option<&[usize]>)>)] = &[
+        (1, Either::Right((&[2, 3], Some(&[3, 2])))),
+        (2, Either::Right((&[4, 4], Some(&[5, 5])))),
+        (3, Either::Right((&[4, 5], Some(&[5, 4])))),
+        (4, Either::Left("a")),
+        (5, Either::Left("b")),
+    ];
+
+    lazy_static! {
+        static ref EXAMPLE_AS_MAP: (String, HashMap<usize, super::Rule>) = (
+            r"ababbb
+bababa
+abbbab
+aaabbb
+aaaabbb"
+                .to_string(),
+            EXAMPLE_RULES
+                .iter()
+                .map(|(n, r)| {
+                    (
+                        *n,
+                        r.map_left(str::to_string)
+                            .map_right(|(a, b)| (a.to_vec(), b.map(Vec::from))),
+                    )
+                })
+                .collect()
+        );
+    }
+
+    #[test]
+    fn gen() {
+        assert_eq!(Some(&*EXAMPLE_AS_MAP), super::gen(EXAMPLE).ok().as_ref());
+    }
+
+    #[test]
+    fn part1() {
+        assert_eq!(2, super::part1(&EXAMPLE_AS_MAP));
+    }
 }

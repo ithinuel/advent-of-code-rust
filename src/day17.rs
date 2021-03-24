@@ -235,3 +235,59 @@ fn part2_alt1(ref_universe: &Universe4DAlt1) -> usize {
     }
     universe.len()
 }
+
+#[cfg(test)]
+mod test {
+    use lazy_static::lazy_static;
+
+    const EXAMPLE: &str = r".#.
+..#
+###";
+
+    const EXAMPLE_AS_ARRAY: &[(isize, &[isize])] = &[(0, &[1]), (1, &[2]), (2, &[0, 1, 2])];
+    const EXAMPLE_AS_TUPLE_ARRAY: &[(isize, isize, isize, isize)] = &[
+        (0, 0, 0, 1),
+        (0, 0, 1, 2),
+        (0, 0, 2, 0),
+        (0, 0, 2, 1),
+        (0, 0, 2, 2),
+    ];
+
+    lazy_static! {
+        static ref EXAMPLE_AS_3DMAP: super::Universe3D = std::iter::once((
+            0isize,
+            EXAMPLE_AS_ARRAY
+                .iter()
+                .map(|(y, v)| { (*y, v.iter().copied().collect()) })
+                .collect(),
+        ))
+        .collect();
+        static ref EXAMPLE_AS_4DMAP: super::Universe4DAlt1 =
+            EXAMPLE_AS_TUPLE_ARRAY.iter().copied().collect();
+    }
+
+    #[test]
+    fn gen_part1() {
+        assert_eq!(*EXAMPLE_AS_3DMAP, super::gen_part1(EXAMPLE));
+    }
+
+    #[test]
+    fn part1() {
+        assert_eq!(112, super::part1(&EXAMPLE_AS_3DMAP));
+    }
+
+    #[test]
+    fn _part2() {
+        assert_eq!(848, super::_part2(EXAMPLE));
+    }
+
+    #[test]
+    fn gen2_alt1() {
+        assert_eq!(*EXAMPLE_AS_4DMAP, super::gen2_alt1(EXAMPLE));
+    }
+
+    #[test]
+    fn part2_alt1() {
+        assert_eq!(848, super::part2_alt1(&EXAMPLE_AS_4DMAP));
+    }
+}
