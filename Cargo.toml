@@ -1,0 +1,19 @@
+[package]
+name = "advent_of_code"
+version = "0.1.0"
+authors = ["Wilfried Chauveau"]
+edition = "2021"
+
+[dependencies]
+anyhow = "*"
+regex = "^1.4"
+itertools = "^0"
+nom = "^6"
+either = "^1.6"
+aoc-runner = "*"
+aoc-runner-derive = { version = "*" }
+bitvec = "0.20"
+
+[dev-dependencies]
+rayon = "*"
+lazy_static = "*"
