@@ -1,4 +1,5 @@
 use aoc_runner_derive::*;
+use itertools::Itertools;
 
 #[aoc_generator(day1)]
 fn gen(input: &str) -> Vec<i32> {
@@ -9,19 +10,23 @@ fn gen(input: &str) -> Vec<i32> {
 fn part1(input: &[i32]) -> usize {
     input
         .iter()
-        .zip(input.iter().skip(1))
-        .map(|(i, j)| j - i)
+        .tuple_windows()
+        .map(|(i, j)| (j - i))
         .filter(|&n| n > 0)
         .count()
 }
 
 #[aoc(day1, part2)]
 fn part2(input: &[i32]) -> usize {
-    input
-        .windows(3)
-        .map(|w| w.iter().sum())
-        .zip(input.windows(3).skip(1).map(|w| w.iter().sum()))
-        .map(|(i, j): (i32, i32)| j - i)
+    let windowed: Vec<i32> = input
+        .iter()
+        .tuple_windows()
+        .map(|(a, b, c)| a + b + c)
+        .collect();
+    windowed
+        .iter()
+        .tuple_windows()
+        .map(|(i, j)| j - i)
         .filter(|&n| n > 0)
         .count()
 }
