@@ -1,5 +1,4 @@
 use aoc_runner_derive::*;
-use itertools::Itertools;
 
 type Board = Vec<Vec<(u32, bool)>>;
 
@@ -27,42 +26,68 @@ fn gen(input: &str) -> (Vec<u32>, Vec<Board>) {
     (random_numbers, boards)
 }
 
+fn update_board(b: &mut Board, n: u32) -> Option<(usize, usize)> {
+    for (i, line) in b.iter_mut().enumerate() {
+        for (j, digit) in line.iter_mut().enumerate() {
+            if digit.0 == n {
+                digit.1 = true;
+                return Some((i, j));
+            }
+        }
+    }
+    None
+}
+fn check_vicotry(set: Option<(usize, usize)>, b: &Board) -> bool {
+    set.map(|(i, j)| {
+        let line = b[i].iter().filter(|n| n.1).count();
+        let column = b.iter().map(|line| line[j]).filter(|n| n.1).count();
+        line == 5 || column == 5
+    })
+    .unwrap_or(false)
+}
+fn compute_score(b: &Board, n: u32) -> u32 {
+    let score = b
+        .iter()
+        .flat_map(|line| line.iter())
+        .filter_map(|n| if !n.1 { Some(n.0) } else { None })
+        .sum::<u32>()
+        * n;
+    score
+}
+
 #[aoc(day4, part1)]
 fn part1(input: &(Vec<u32>, Vec<Board>)) -> u32 {
     let (rnd, mut boards) = input.clone();
     for &n in rnd.iter() {
-        // find n on the board, if present mark it
         for b in boards.iter_mut() {
-            let mut set = None;
-            'board: for (i, line) in b.iter_mut().enumerate() {
-                for (j, digit) in line.iter_mut().enumerate() {
-                    if digit.0 == n {
-                        digit.1 = true;
-                        set = Some((i, j));
-                        break 'board;
-                    }
-                }
-            }
-            if let Some((i, j)) = set {
-                let line = b[i].iter().filter(|n| n.1).count();
-                let column = b.iter().map(|line| line[j]).filter(|n| n.1).count();
-                if line == 5 || column == 5 {
-                    return b
-                        .iter()
-                        .flat_map(|line| line.iter())
-                        .filter_map(|n| if !n.1 { Some(n.0) } else { None })
-                        .sum::<u32>()
-                        * n;
-                }
+            let set = update_board(b, n);
+            if check_vicotry(set, b) {
+                return compute_score(b, n);
             }
         }
     }
-    0
+    unreachable!("No one won!");
 }
 
-//#[aoc(day4, part2)]
-fn part2(input: &(Vec<u32>, Vec<Board>)) -> usize {
-    todo!()
+#[aoc(day4, part2)]
+fn part2(input: &(Vec<u32>, Vec<Board>)) -> u32 {
+    let (rnd, mut boards) = input.clone();
+    let mut winning_board = Vec::new();
+    for &n in rnd.iter() {
+        let mut winers = Vec::new();
+        for (id, b) in boards.iter_mut().enumerate() {
+            let set = update_board(b, n);
+            if check_vicotry(set, b) {
+                winers.push(id);
+            }
+        }
+        winers.iter().rev().for_each(|&id| {
+            let b = boards.remove(id);
+            let score = compute_score(&b, n);
+            winning_board.push(score);
+        })
+    }
+    *winning_board.last().expect("No one won!")
 }
 
 #[cfg(test)]
@@ -96,6 +121,6 @@ mod test {
 
     #[test]
     fn part2() {
-        //assert_eq!((), solve_part2(&gen(EXAMPLE)));
+        assert_eq!(1924, solve_part2(&gen(EXAMPLE)));
     }
 }
