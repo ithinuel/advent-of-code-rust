@@ -11,7 +11,7 @@ fn gen(input: &str) -> Parsed {
         .lines()
         .filter_map(|l| {
             l.split(" -> ")
-                .filter_map(|coord| coord.split(",").filter_map(|n| n.parse().ok()).next_tuple())
+                .filter_map(|coord| coord.split(',').filter_map(|n| n.parse().ok()).next_tuple())
                 .next_tuple()
         })
         .collect()
@@ -21,14 +21,12 @@ fn gen(input: &str) -> Parsed {
 fn part1(input: &Parsed) -> usize {
     let input: Vec<_> = input
         .iter()
-        .filter_map(|(a, b)| {
-            if a.0 == b.0 {
-                Some(((a.0, u32::min(a.1, b.1)), (a.0, u32::max(a.1, b.1))))
-            } else if a.1 == b.1 {
-                Some(((u32::min(a.0, b.0), a.1), (u32::max(a.0, b.0), a.1)))
-            } else {
-                None
-            }
+        .filter(|(a, b)| a.0 == b.0 || a.1 == b.1)
+        .map(|(a, b)| {
+            (
+                (u32::min(a.0, b.0), u32::min(a.1, b.1)),
+                (u32::max(a.0, b.0), u32::max(a.1, b.1)),
+            )
         })
         .collect();
     let (max_x, max_y) = input.iter().fold((0, 0), |acc, (a, b)| {
