@@ -1,8 +1,7 @@
-use std::{iter::Repeat, ops::RangeInclusive};
+use std::iter::repeat;
 
 use aoc_runner_derive::*;
 use itertools::Itertools;
-use std::iter::Rev;
 
 type Parsed = Vec<((u32, u32), (u32, u32))>;
 
@@ -62,30 +61,22 @@ fn part2(input: &Parsed) -> usize {
     let size = ((1 + max_x) * (1 + max_y)) as usize;
     let mut map = Vec::new();
     map.resize(size, 0);
-    println!("{:?}", input);
+
     for (a, b) in input {
-        use either::Either::{self, *};
+        use either::Either::*;
+        use std::cmp::Ordering::*;
 
         let x_coords = match a.0.cmp(&b.0) {
-            std::cmp::Ordering::Less => Left(a.0..=b.0),
-            std::cmp::Ordering::Equal => Right(
-                Either::<_, Rev<RangeInclusive<u32>>>::Left(std::iter::repeat(a.0)).into_iter(),
-            ),
-            std::cmp::Ordering::Greater => {
-                Right(Either::<Repeat<u32>, _>::Right((b.0..=a.0).rev()).into_iter())
-            }
+            Less => Left(a.0..=b.0),
+            Equal => Right(Left(repeat(a.0))),
+            Greater => Right(Right((b.0..=a.0).rev())),
         };
         let y_coords = match a.1.cmp(&b.1) {
-            std::cmp::Ordering::Less => Left(a.1..=b.1),
-            std::cmp::Ordering::Equal => Right(
-                Either::<_, Rev<RangeInclusive<u32>>>::Left(std::iter::repeat(a.1)).into_iter(),
-            ),
-            std::cmp::Ordering::Greater => {
-                Right(Either::<Repeat<u32>, _>::Right((b.1..=a.1).rev()).into_iter())
-            }
+            Less => Left(a.1..=b.1),
+            Equal => Right(Left(repeat(a.1))),
+            Greater => Right(Right((b.1..=a.1).rev())),
         };
         x_coords.zip(y_coords).for_each(|(x, y)| {
-            println!("{},{}", x, y);
             map[(x + y * max_x) as usize] += 1;
         });
     }
@@ -94,7 +85,7 @@ fn part2(input: &Parsed) -> usize {
 
 #[cfg(test)]
 mod test {
-    use super::{gen, part1 as solve_part1, part2 as solve_part2};
+    use super::gen;
 
     const EXAMPLE: &str = r"0,9 -> 5,9
 8,0 -> 0,8
@@ -109,11 +100,11 @@ mod test {
 
     #[test]
     fn part1() {
-        assert_eq!(5, solve_part1(&gen(EXAMPLE)));
+        assert_eq!(5, super::part1(&gen(EXAMPLE)));
     }
 
     #[test]
     fn part2() {
-        assert_eq!(12, solve_part2(&gen(EXAMPLE)));
+        assert_eq!(12, super::part2(&gen(EXAMPLE)));
     }
 }
