@@ -66,6 +66,27 @@ fn part2(input: &[usize; 9]) -> usize {
     pop.iter().cloned().sum()
 }
 
+#[aoc(day6, part1, no_rotation)]
+fn part1_no_rotation(input: &[usize; 9]) -> usize {
+    let mut pop = [0; 9];
+    pop.copy_from_slice(input);
+    for day in 0..80 {
+        pop[(day + 7) % 9] += pop[day % 9];
+    }
+
+    pop.iter().cloned().sum()
+}
+#[aoc(day6, part2, no_rotation)]
+fn part2_no_rotation(input: &[usize; 9]) -> usize {
+    let mut pop = [0; 9];
+    pop.copy_from_slice(input);
+    for day in 0..256 {
+        pop[(day + 7) % 9] += pop[day % 9];
+    }
+
+    pop.iter().cloned().sum()
+}
+
 #[cfg(test)]
 mod test {
     const EXAMPLE: &str = r"3,4,3,1,2";
@@ -84,7 +105,15 @@ mod test {
         assert_eq!(5934, super::part1(&gen(EXAMPLE)));
     }
     #[test]
+    fn part1_no_rotation() {
+        assert_eq!(5934, super::part1_no_rotation(&gen(EXAMPLE)));
+    }
+    #[test]
     fn part2() {
         assert_eq!(26984457539, super::part2(&gen(EXAMPLE)));
+    }
+    #[test]
+    fn part2_no_rotation() {
+        assert_eq!(26984457539, super::part2_no_rotation(&gen(EXAMPLE)));
     }
 }
