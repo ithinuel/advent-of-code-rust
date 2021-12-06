@@ -1,4 +1,4 @@
-use std::iter::repeat;
+use std::{collections::HashMap, iter::repeat};
 
 use aoc_runner_derive::*;
 use itertools::Itertools;
@@ -81,6 +81,31 @@ fn part2(input: &Parsed) -> usize {
     map.iter().filter(|&&n| n > 1).count()
 }
 
+#[aoc(day5, part2, hashmap)]
+fn part2_hashmap(input: &Parsed) -> usize {
+    let mut map = HashMap::new();
+
+    for (a, b) in input {
+        use either::Either::*;
+        use std::cmp::Ordering::*;
+
+        let x_coords = match a.0.cmp(&b.0) {
+            Less => Left(a.0..=b.0),
+            Equal => Right(Left(repeat(a.0))),
+            Greater => Right(Right((b.0..=a.0).rev())),
+        };
+        let y_coords = match a.1.cmp(&b.1) {
+            Less => Left(a.1..=b.1),
+            Equal => Right(Left(repeat(a.1))),
+            Greater => Right(Right((b.1..=a.1).rev())),
+        };
+        x_coords.zip(y_coords).for_each(|(x, y)| {
+            *map.entry((x, y)).or_insert(0) += 1;
+        });
+    }
+    map.iter().filter(|(_, &n)| n > 1).count()
+}
+
 #[cfg(test)]
 mod test {
     use super::gen;
@@ -104,5 +129,10 @@ mod test {
     #[test]
     fn part2() {
         assert_eq!(12, super::part2(&gen(EXAMPLE)));
+    }
+
+    #[test]
+    fn part2_hashmap() {
+        assert_eq!(12, super::part2_hashmap(&gen(EXAMPLE)));
     }
 }
