@@ -1,13 +1,8 @@
 use aoc_runner_derive::*;
 
-#[aoc_generator(day6)]
-fn gen(input: &str) -> Vec<usize> {
-    input.split(',').filter_map(|n| n.parse().ok()).collect()
-}
-
-#[aoc(day6, part1)]
-fn part1(input: &[usize]) -> usize {
-    let mut input: Vec<_> = input.to_vec();
+#[aoc(day6, part1, bruteforce)]
+fn part1_bruteforce(input: &str) -> usize {
+    let mut input: Vec<_> = input.split(',').filter_map(|n| n.parse().ok()).collect();
     input.sort_unstable();
 
     for _d in 0..80 {
@@ -25,18 +20,39 @@ fn part1(input: &[usize]) -> usize {
     input.len()
 }
 
-#[aoc(day6, part2)]
-fn part2(input: &[usize]) -> usize {
+fn gen(input: &str) -> [usize; 9] {
     let mut pop = [0; 9];
-    input.iter().for_each(|&n| {
-        pop[n] += 1;
-    });
+    input
+        .split(',')
+        .filter_map(|n| n.parse().ok())
+        .for_each(|n: usize| {
+            pop[n] += 1;
+        });
+    pop
+}
 
-    for _d in 0..256 {
-        let n = pop[0];
-        pop.rotate_left(1);
-        pop[6] += n;
-        pop[8] = n;
+fn one_generation(pop: &mut [usize; 9]) {
+    let n = pop[0];
+    pop.rotate_left(1);
+    pop[6] += n;
+    pop[8] = n;
+}
+
+#[aoc(day6, part1)]
+fn part1(input: &str) -> usize {
+    let mut pop = gen(input);
+    for _ in 0..80 {
+        one_generation(&mut pop);
+    }
+
+    pop.iter().cloned().sum()
+}
+
+#[aoc(day6, part2)]
+fn part2(input: &str) -> usize {
+    let mut pop = gen(input);
+    for _ in 0..256 {
+        one_generation(&mut pop);
     }
 
     pop.iter().cloned().sum()
@@ -44,16 +60,18 @@ fn part2(input: &[usize]) -> usize {
 
 #[cfg(test)]
 mod test {
-    use super::gen;
-
     const EXAMPLE: &str = r"3,4,3,1,2";
 
     #[test]
+    fn part1_bruteforce() {
+        assert_eq!(5934, super::part1_bruteforce(EXAMPLE));
+    }
+    #[test]
     fn part1() {
-        assert_eq!(5934, super::part1(&gen(EXAMPLE)));
+        assert_eq!(5934, super::part1(EXAMPLE));
     }
     #[test]
     fn part2() {
-        assert_eq!(26984457539, super::part2(&gen(EXAMPLE)));
+        assert_eq!(26984457539, super::part2(EXAMPLE));
     }
 }
