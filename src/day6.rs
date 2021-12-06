@@ -1,8 +1,13 @@
 use aoc_runner_derive::*;
 
+#[aoc_generator(day6, part1, bruteforce)]
+fn gen_part1_bruteforce(input: &str) -> Vec<usize> {
+    input.split(',').filter_map(|n| n.parse().ok()).collect()
+}
+
 #[aoc(day6, part1, bruteforce)]
-fn part1_bruteforce(input: &str) -> usize {
-    let mut input: Vec<_> = input.split(',').filter_map(|n| n.parse().ok()).collect();
+fn part1_bruteforce(input: &Vec<usize>) -> usize {
+    let mut input = input.clone();
     input.sort_unstable();
 
     for _d in 0..80 {
@@ -20,6 +25,7 @@ fn part1_bruteforce(input: &str) -> usize {
     input.len()
 }
 
+#[aoc_generator(day6)]
 fn gen(input: &str) -> [usize; 9] {
     let mut pop = [0; 9];
     input
@@ -39,8 +45,9 @@ fn one_generation(pop: &mut [usize; 9]) {
 }
 
 #[aoc(day6, part1)]
-fn part1(input: &str) -> usize {
-    let mut pop = gen(input);
+fn part1(input: &[usize; 9]) -> usize {
+    let mut pop = [0; 9];
+    pop.copy_from_slice(input);
     for _ in 0..80 {
         one_generation(&mut pop);
     }
@@ -49,8 +56,9 @@ fn part1(input: &str) -> usize {
 }
 
 #[aoc(day6, part2)]
-fn part2(input: &str) -> usize {
-    let mut pop = gen(input);
+fn part2(input: &[usize; 9]) -> usize {
+    let mut pop = [0; 9];
+    pop.copy_from_slice(input);
     for _ in 0..256 {
         one_generation(&mut pop);
     }
@@ -62,16 +70,21 @@ fn part2(input: &str) -> usize {
 mod test {
     const EXAMPLE: &str = r"3,4,3,1,2";
 
+    use super::{gen, gen_part1_bruteforce};
+
     #[test]
     fn part1_bruteforce() {
-        assert_eq!(5934, super::part1_bruteforce(EXAMPLE));
+        assert_eq!(
+            5934,
+            super::part1_bruteforce(&gen_part1_bruteforce(EXAMPLE))
+        );
     }
     #[test]
     fn part1() {
-        assert_eq!(5934, super::part1(EXAMPLE));
+        assert_eq!(5934, super::part1(&gen(EXAMPLE)));
     }
     #[test]
     fn part2() {
-        assert_eq!(26984457539, super::part2(EXAMPLE));
+        assert_eq!(26984457539, super::part2(&gen(EXAMPLE)));
     }
 }
