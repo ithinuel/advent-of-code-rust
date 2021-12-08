@@ -1,12 +1,12 @@
 use aoc_runner_derive::*;
 
 #[aoc_generator(day7)]
-fn gen(input: &str) -> Vec<usize> {
+fn gen(input: &str) -> Vec<i32> {
     input.split(',').filter_map(|n| n.parse().ok()).collect()
 }
 
 #[aoc(day7, part1)]
-fn part1(input: &[usize]) -> usize {
+fn part1(input: &[i32]) -> i32 {
     let mut input = input.to_vec();
     input.sort_unstable();
 
@@ -19,20 +19,17 @@ fn part1(input: &[usize]) -> usize {
         })
         .unwrap();
 
-    input
-        .iter()
-        .map(|n| if n > median { n - median } else { median - n })
-        .sum()
+    input.iter().map(|n| (n - median).abs()).sum()
 }
 
 #[aoc(day7, part2)]
-fn part2(input: &[usize]) -> usize {
-    let max = input.iter().max().unwrap();
-    (0..*max)
+fn part2(input: &[i32]) -> i32 {
+    let max = *input.iter().max().unwrap();
+    (0..max)
         .map(|pos| {
             input
                 .iter()
-                .map(|&n| if n > pos { n - pos } else { pos - n })
+                .map(|&n| (n - pos).abs())
                 .map(|distance| (distance * (distance + 1)) / 2)
                 .sum()
         })
