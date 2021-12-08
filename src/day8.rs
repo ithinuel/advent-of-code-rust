@@ -36,12 +36,12 @@ fn part1(input: &str) -> usize {
 /// 4 : abef : ef is either uw or wu
 /// 7 : abd : d is t
 ///
-/// cagedb : contains ab but not uw => 0
-/// cefabd : contains ab & uw => 9
-/// cdfgeb :  => 6
+/// cdfgeb : does not contain 1 => 6
+/// cefabd : contains (4-1) => 9
+/// cagedb :  => 0
 ///
-/// abcdf : contains ab => 3
-/// cbdef : contains uw => 5
+/// abcdf : contains 1 => 3
+/// cbdef : contains (4-1) => 5
 /// acdfg : => 2
 
 fn infer<'a>(input: &'a [HashSet<u8>]) -> HashMap<usize, &'a HashSet<u8>> {
@@ -55,35 +55,27 @@ fn infer<'a>(input: &'a [HashSet<u8>]) -> HashMap<usize, &'a HashSet<u8>> {
             _ => None,
         })
         .collect();
-    let uw: HashSet<_> = first_pass[&4]
-        .difference(&first_pass[&1])
-        .cloned()
-        .collect();
+    let one = first_pass[&1];
+    let uw = first_pass[&4] - one;
 
     let mut infered: HashMap<_, _> = input
         .iter()
-        .filter_map(|n| {
-            if n.len() == 5 {
-                if first_pass[&1].is_subset(n) {
-                    Some((3, n))
-                } else if uw.is_subset(n) {
-                    Some((5, n))
-                } else {
-                    Some((2, n))
-                }
-            } else if n.len() == 6 {
-                if first_pass[&1].is_subset(n) {
-                    if uw.is_subset(n) {
-                        Some((9, n))
-                    } else {
-                        Some((0, n))
-                    }
-                } else {
-                    Some((6, n))
-                }
+        .filter_map(|n| match n.len() {
+            6 => Some(if !one.is_subset(n) {
+                (6, n)
+            } else if uw.is_subset(n) {
+                (9, n)
             } else {
-                None
-            }
+                (0, n)
+            }),
+            5 => Some(if one.is_subset(n) {
+                (3, n)
+            } else if uw.is_subset(n) {
+                (5, n)
+            } else {
+                (2, n)
+            }),
+            _ => None,
         })
         .collect();
     infered.extend(first_pass);
