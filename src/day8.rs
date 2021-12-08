@@ -5,21 +5,16 @@ use itertools::Itertools;
 
 #[aoc(day8, part1)]
 fn part1(input: &str) -> usize {
-    let lengths = input
+    input
         .lines()
-        .map(|l| {
+        .flat_map(|l| {
             l.split(" | ")
                 .skip(1)
                 .flat_map(|s| s.split_ascii_whitespace())
                 .map(|s| s.as_bytes().len())
-                .collect_vec()
+                .filter(|l| [2, 3, 4, 7].contains(l))
         })
-        .collect_vec();
-
-    lengths
-        .iter()
-        .map(|lens| lens.iter().filter(|l| [2, 3, 4, 7].contains(l)).count())
-        .sum()
+        .count()
 }
 
 /// ```text
