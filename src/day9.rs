@@ -11,33 +11,26 @@ fn gen(input: &str) -> Vec<Vec<u8>> {
         .collect_vec()
 }
 
-fn get_neighboors<'a>(
+fn get_neighbours<'a>(
     input: &'a [Vec<u8>],
     (x, y): (usize, usize),
 ) -> impl Iterator<Item = ((usize, usize), u8)> + 'a {
-    let line = &input[y];
-    let left = if x > 0 {
-        line.get(x - 1).map(|&v| ((x - 1, y), v))
-    } else {
-        None
-    };
-    let right = line.get(x + 1).map(|&v| ((x + 1, y), v));
-    let top = if y > 0 {
-        input[y - 1].get(x).map(|&v| ((x, y - 1), v))
-    } else {
-        None
-    };
-    let bottom = input
-        .get(y + 1)
-        .and_then(|l| l.get(x))
-        .map(|&v| ((x, y + 1), v));
+    let left_col = x.wrapping_sub(1);
+    let top_line = y.wrapping_sub(1);
 
-    [left, top, right, bottom].into_iter().filter_map(|v| v)
+    [(left_col, y), (x, top_line), (x + 1, y), (x, y + 1)]
+        .into_iter()
+        .filter_map(|(x, y)| {
+            input
+                .get(y)
+                .and_then(|line| line.get(x))
+                .map(|&cell| ((x, y), cell))
+        })
 }
 fn find_low_points<'a>(input: &'a [Vec<u8>]) -> impl Iterator<Item = ((usize, usize), u8)> + 'a {
     input.iter().enumerate().flat_map(move |(y, line)| {
         line.iter().enumerate().filter_map(move |(x, &cell)| {
-            if get_neighboors(input, (x, y)).all(|(_, cell2)| cell < cell2) {
+            if get_neighbours(input, (x, y)).all(|(_, cell2)| cell < cell2) {
                 Some(((x, y), cell))
             } else {
                 None
@@ -72,7 +65,7 @@ fn part2(input: &[Vec<u8>]) -> usize {
 
         bassins[id] += 1;
         visited.insert(coords);
-        get_neighboors(input, coords)
+        get_neighbours(input, coords)
             .filter(|&(_, cell)| cell < 9)
             .for_each(|(coords, _)| {
                 if !visited.contains(&coords) {
