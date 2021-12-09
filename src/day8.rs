@@ -107,7 +107,72 @@ fn part2(input: &str) -> usize {
         .sum()
 }
 
-fn infer_bitmask(patterns: &[u8]) -> [Option<u32>; 128] {
+fn infer_bitmask(patterns: &[u8]) -> [u8; 10] {
+    let mut result = [0; 10];
+    patterns.iter().cloned().for_each(|n| {
+        match n.count_ones() {
+            5 | 6 => None,
+            2 => Some(1),
+            3 => Some(7),
+            4 => Some(4),
+            7 => Some(8),
+            _ => unreachable!(),
+        }
+        .map(|idx| result[idx] = n);
+    });
+
+    let one = result[1];
+    let uw = result[4] ^ one;
+
+    patterns.iter().cloned().for_each(|n| {
+        match n.count_ones() {
+            6 if (n & one) != one => Some(6),
+            6 if (n & uw) == uw => Some(9),
+            6 => Some(0),
+            5 if (n & one) == one => Some(3),
+            5 if (n & uw) == uw => Some(5),
+            5 => Some(2),
+            _ => None,
+        }
+        .map(|idx| result[idx] = n);
+    });
+    result
+}
+
+#[aoc(day8, part2, bitmask)]
+fn part2_bitmask(input: &str) -> u32 {
+    let to_bitmask = |s: &str| {
+        s.bytes().fold(0, |acc, b| {
+            acc | match b {
+                b'a' => 0b000_0001,
+                b'b' => 0b000_0010,
+                b'c' => 0b000_0100,
+                b'd' => 0b000_1000,
+                b'e' => 0b001_0000,
+                b'f' => 0b010_0000,
+                b'g' => 0b100_0000,
+                _ => unreachable!(),
+            }
+        })
+    };
+
+    input
+        .lines()
+        .map(|line| {
+            let (patterns, digits) = line.split(" | ").next_tuple().unwrap();
+            let patterns: Vec<u8> = patterns.split_ascii_whitespace().map(to_bitmask).collect();
+
+            let map = infer_bitmask(&patterns);
+            digits
+                .split_ascii_whitespace()
+                .map(to_bitmask)
+                .map(|n| map.iter().cloned().find_position(|&m| n == m).unwrap().0 as u32)
+                .fold(0, |acc, n| acc * 10 + n)
+        })
+        .sum()
+}
+
+fn infer_bitmask_transposed(patterns: &[u8]) -> [Option<u32>; 128] {
     let mut result = [None; 128];
     let mut one = 0;
     let mut four = 0;
@@ -144,8 +209,8 @@ fn infer_bitmask(patterns: &[u8]) -> [Option<u32>; 128] {
     result
 }
 
-#[aoc(day8, part2, bitmask)]
-fn part2_bitmask(input: &str) -> u32 {
+#[aoc(day8, part2, bitmask_transposed)]
+fn part2_bitmask_transposed(input: &str) -> u32 {
     let to_bitmask = |s: &str| {
         s.bytes().fold(0, |acc, b| {
             acc | match b {
@@ -167,7 +232,7 @@ fn part2_bitmask(input: &str) -> u32 {
             let (patterns, digits) = line.split(" | ").next_tuple().unwrap();
             let patterns: Vec<u8> = patterns.split_ascii_whitespace().map(to_bitmask).collect();
 
-            let map = infer_bitmask(&patterns);
+            let map = infer_bitmask_transposed(&patterns);
             digits
                 .split_ascii_whitespace()
                 .map(to_bitmask)
@@ -202,5 +267,9 @@ gcafb gcf dcaebfg ecagb gf abcdeg gaef cafbge fdbac fegbdc | fgae cfgab fg bagce
     #[test]
     fn part2_bitmask() {
         assert_eq!(61229, super::part2_bitmask(EXAMPLE));
+    }
+    #[test]
+    fn part2_bitmask_transposed() {
+        assert_eq!(61229, super::part2_bitmask_transposed(EXAMPLE));
     }
 }
