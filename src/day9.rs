@@ -1,7 +1,7 @@
+use std::collections::{BTreeSet, VecDeque};
+
 use aoc_runner_derive::*;
 use itertools::Itertools;
-
-const NEIGHBOORS: [(isize, isize); 4] = [(0, -1), (-1, 0), (0, 1), (1, 0)];
 
 #[aoc_generator(day9)]
 fn gen(input: &str) -> Vec<Vec<u8>> {
@@ -11,33 +11,78 @@ fn gen(input: &str) -> Vec<Vec<u8>> {
         .collect_vec()
 }
 
+fn get_neighboors<'a>(
+    input: &'a [Vec<u8>],
+    (x, y): (usize, usize),
+) -> impl Iterator<Item = ((usize, usize), u8)> + 'a {
+    let line = &input[y];
+    let left = if x > 0 {
+        line.get(x - 1).map(|&v| ((x - 1, y), v))
+    } else {
+        None
+    };
+    let right = line.get(x + 1).map(|&v| ((x + 1, y), v));
+    let top = if y > 0 {
+        input[y - 1].get(x).map(|&v| ((x, y - 1), v))
+    } else {
+        None
+    };
+    let bottom = input
+        .get(y + 1)
+        .and_then(|l| l.get(x))
+        .map(|&v| ((x, y + 1), v));
+
+    [left, top, right, bottom].into_iter().filter_map(|v| v)
+}
+fn find_low_points<'a>(input: &'a [Vec<u8>]) -> impl Iterator<Item = ((usize, usize), u8)> + 'a {
+    input.iter().enumerate().flat_map(move |(y, line)| {
+        line.iter().enumerate().filter_map(move |(x, &cell)| {
+            if get_neighboors(input, (x, y)).all(|(_, cell2)| cell < cell2) {
+                Some(((x, y), cell))
+            } else {
+                None
+            }
+        })
+    })
+}
+
 #[aoc(day9, part1)]
 fn part1(input: &[Vec<u8>]) -> usize {
-    input
-        .iter()
-        .enumerate()
-        .flat_map(|(y, line)| {
-            line.iter().enumerate().filter_map(move |(x, cell)| {
-                if NEIGHBOORS
-                    .iter()
-                    .flat_map(|(dx, dy)| {
-                        input
-                            .get(((y as isize) + dy) as usize)
-                            .and_then(|line| line.get(((x as isize) + dx) as usize))
-                    })
-                    .all(|cell2| cell < cell2)
-                {
-                    Some(*cell as usize + 1)
-                } else {
-                    None
-                }
-            })
-        })
+    find_low_points(input)
+        .map(|(_, cell)| cell as usize + 1)
         .sum()
 }
 
+#[aoc(day9, part2)]
 fn part2(input: &[Vec<u8>]) -> usize {
-    todo!()
+    let mut to_visit: VecDeque<((usize, usize), usize)> = find_low_points(input)
+        .enumerate()
+        .map(|(bassin_id, (coords, _))| (coords, bassin_id))
+        .collect();
+    let mut visited = BTreeSet::new();
+    let mut bassins = Vec::new();
+
+    while let Some((coords, id)) = to_visit.pop_front() {
+        if visited.contains(&coords) {
+            continue;
+        }
+        if bassins.len() <= id {
+            bassins.resize(id + 1, 0)
+        }
+
+        bassins[id] += 1;
+        visited.insert(coords);
+        get_neighboors(input, coords)
+            .filter(|&(_, cell)| cell < 9)
+            .for_each(|(coords, _)| {
+                if !visited.contains(&coords) {
+                    to_visit.push_back((coords, id));
+                }
+            })
+    }
+
+    bassins.sort_unstable();
+    bassins.iter().rev().take(3).product()
 }
 
 #[cfg(test)]
