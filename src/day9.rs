@@ -52,23 +52,15 @@ fn part2(input: &[Vec<u8>]) -> usize {
         .enumerate()
         .map(|(bassin_id, (coords, _))| (coords, bassin_id))
         .collect();
-    let mut visited = BTreeSet::new();
-    let mut bassins = Vec::new();
+    let mut visited: BTreeSet<_> = to_visit.iter().map(|&(coords, _)| coords).collect();
+    let mut bassins: Vec<_> = std::iter::repeat(0).take(to_visit.len()).collect();
 
     while let Some((coords, id)) = to_visit.pop_front() {
-        if visited.contains(&coords) {
-            continue;
-        }
-        if bassins.len() <= id {
-            bassins.resize(id + 1, 0)
-        }
-
         bassins[id] += 1;
-        visited.insert(coords);
         get_neighbours(input, coords)
             .filter(|&(_, cell)| cell < 9)
             .for_each(|(coords, _)| {
-                if !visited.contains(&coords) {
+                if visited.insert(coords) {
                     to_visit.push_back((coords, id));
                 }
             })
