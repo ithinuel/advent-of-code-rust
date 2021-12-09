@@ -1,4 +1,7 @@
-use std::collections::{BTreeSet, VecDeque};
+use std::{
+    collections::{BTreeSet, VecDeque},
+    iter::repeat,
+};
 
 use aoc_runner_derive::*;
 use itertools::Itertools;
@@ -53,7 +56,7 @@ fn part2(input: &[Vec<u8>]) -> usize {
         .map(|(bassin_id, (coords, _))| (coords, bassin_id))
         .collect();
     let mut visited: BTreeSet<_> = to_visit.iter().map(|&(coords, _)| coords).collect();
-    let mut bassins: Vec<_> = std::iter::repeat(0).take(to_visit.len()).collect();
+    let mut bassins: Vec<_> = repeat(0).take(to_visit.len()).collect();
 
     while let Some((coords, id)) = to_visit.pop_front() {
         bassins[id] += 1;
@@ -61,6 +64,38 @@ fn part2(input: &[Vec<u8>]) -> usize {
             .filter(|&(_, cell)| cell < 9)
             .for_each(|(coords, _)| {
                 if visited.insert(coords) {
+                    to_visit.push_back((coords, id));
+                }
+            })
+    }
+
+    bassins.sort_unstable();
+    bassins.iter().rev().take(3).product()
+}
+
+#[aoc(day9, part2, alt)]
+fn part2_alt(input: &[Vec<u8>]) -> usize {
+    let mut to_visit: VecDeque<((usize, usize), usize)> = find_low_points(input)
+        .enumerate()
+        .map(|(bassin_id, (coords, _))| (coords, bassin_id))
+        .collect();
+    let mut visited = input
+        .iter()
+        .map(|line| repeat(false).take(line.len()).collect_vec())
+        .collect_vec();
+    to_visit.iter().for_each(|&((x, y), _)| {
+        visited[y][x] = true;
+    });
+    let mut bassins: Vec<_> = repeat(0).take(to_visit.len()).collect();
+
+    while let Some((coords, id)) = to_visit.pop_front() {
+        bassins[id] += 1;
+        get_neighbours(input, coords)
+            .filter(|&(_, cell)| cell < 9)
+            .for_each(|(coords, _)| {
+                let visited = &mut visited[coords.1][coords.0];
+                if !*visited {
+                    *visited = true;
                     to_visit.push_back((coords, id));
                 }
             })
@@ -88,5 +123,10 @@ mod test {
     #[test]
     fn part2() {
         assert_eq!(1134, super::part2(&gen(EXAMPLE)));
+    }
+
+    #[test]
+    fn part2_alt() {
+        assert_eq!(1134, super::part2_alt(&gen(EXAMPLE)));
     }
 }
