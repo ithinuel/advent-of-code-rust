@@ -5,14 +5,14 @@ use itertools::Itertools;
 fn check_line(line: &str) -> Result<(), Either<u8, Vec<u8>>> {
     let mut stack = Vec::new();
     for b in line.bytes() {
-        if let b'(' | b'<' | b'{' | b'[' = b {
+        if let b'(' | b'[' | b'{' | b'<' = b {
             stack.push(b);
         } else {
-            let is_ok = stack.pop().map(|b2| match (b2, b) {
-                (b'(', b')') | (b'{', b'}') | (b'[', b']') | (b'<', b'>') => true,
+            let maybe_ok = stack.pop().map(|b2| match (b2, b) {
+                (b'(', b')') | (b'[', b']') | (b'{', b'}') | (b'<', b'>') => true,
                 _ => false,
             });
-            if !is_ok.unwrap_or(true) {
+            if !maybe_ok.unwrap_or(true) {
                 return Err(Left(b));
             }
         }
@@ -47,8 +47,8 @@ fn part2(input: &str) -> usize {
             check_line(line).err().and_then(|e| e.right()).map(|stack| {
                 stack.into_iter().rev().map(|b| match b {
                     b'(' => b')',
-                    b'{' => b'}',
                     b'[' => b']',
+                    b'{' => b'}',
                     b'<' => b'>',
                     _ => unreachable!(),
                 })
