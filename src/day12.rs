@@ -1,8 +1,7 @@
 use aoc_runner_derive::*;
 use std::collections::BTreeSet;
 
-use either::Either;
-use itertools::Itertools;
+use either::Either::*;
 
 type Map = BTreeSet<(String, String)>;
 
@@ -11,19 +10,20 @@ fn gen(input: &str) -> Map {
     input
         .lines()
         .flat_map(|l| {
+            use itertools::Itertools;
             match l.split('-').map(str::to_string).next_tuple() {
-                Some((s, e)) => Either::Left([(s.clone(), e.clone()), (e, s)]),
-                None => Either::Right([]),
+                Some((s, e)) => Left([(s.clone(), e.clone()), (e, s)]),
+                None => Right([]),
             }
             .into_iter()
         })
         .collect()
 }
 
-fn is_small_cave(cave: &str) -> bool {
+fn is_large_cave(cave: &str) -> bool {
     cave.bytes()
         .next()
-        .map(|b| b.is_ascii_lowercase())
+        .map(|b| b.is_ascii_uppercase())
         .expect("node has no name >.<")
 }
 
@@ -34,19 +34,17 @@ fn navigate<'a>(
     path: Vec<&'a str>,
 ) -> impl Iterator<Item = Vec<&'a str>> {
     if current == "end" {
-        Either::Left(std::iter::once(path))
+        Left(std::iter::once(path))
     } else {
         let mut paths = Vec::new();
         for e in map.iter().filter_map(|(s, e)| (s == current).then(|| e)) {
-            let mut visited = visited.clone();
-            let mut path = path.clone();
+            let (mut visited, mut path) = (visited.clone(), path.clone());
             path.push(e);
-            if is_small_cave(e) && !visited.insert(e) {
-                continue;
+            if is_large_cave(e) || visited.insert(e) {
+                paths.extend(navigate(map, e, visited, path));
             }
-            paths.extend(navigate(map, e, visited, path));
         }
-        Either::Right(paths.into_iter())
+        Right(paths.into_iter())
     }
 }
 
@@ -56,7 +54,7 @@ fn part1(map: &Map) -> usize {
     navigate(&map, "start", start.into(), start.into()).count()
 }
 
-fn navigate_alt<'a>(
+fn navigate_part2<'a>(
     map: &'a Map,
     current: &'a str,
     visited: BTreeSet<&'a str>,
@@ -64,36 +62,36 @@ fn navigate_alt<'a>(
     can_visit_small_twice: bool,
 ) -> impl Iterator<Item = Vec<&'a str>> {
     if current == "end" {
-        Either::Left(std::iter::once(path))
+        Left(std::iter::once(path))
     } else {
         let mut paths = Vec::new();
         for e in map.iter().filter_map(|(s, e)| (s == current).then(|| e)) {
-            let mut visited = visited.clone();
-            let mut path = path.clone();
+            let (mut visited, mut path) = (visited.clone(), path.clone());
             path.push(e);
-            let mut can_visit_small_twice = can_visit_small_twice;
-            if is_small_cave(e) && !visited.insert(e) {
-                if !can_visit_small_twice {
+
+            let can_visit_small_twice = if !(is_large_cave(e) || visited.insert(e)) {
+                if can_visit_small_twice && e != "start" {
+                    false
+                } else {
                     continue;
                 }
-                can_visit_small_twice = false;
-            }
-            paths.extend(navigate_alt(map, e, visited, path, can_visit_small_twice));
+            } else {
+                can_visit_small_twice
+            };
+            paths.extend(navigate_part2(map, e, visited, path, can_visit_small_twice));
         }
-        Either::Right(paths.into_iter())
+        Right(paths.into_iter())
     }
 }
 #[aoc(day12, part2)]
 fn part2(map: &Map) -> usize {
     let start = ["start"];
-    navigate_alt(&map, "start", start.into(), start.into(), true).count()
+    navigate_part2(&map, "start", start.into(), start.into(), true).count()
 }
 
 #[cfg(test)]
 mod test {
-    use std::collections::{BTreeSet, HashSet};
-
-    use itertools::Itertools;
+    use std::collections::HashSet;
 
     use super::gen;
 
@@ -116,7 +114,7 @@ start,b,A,c,A,end
 start,b,A,end
 start,b,end";
 
-    const PATHS1_part2: &str = r"start,A,b,A,b,A,c,A,end
+    const PATHS1_P2: &str = r"start,A,b,A,b,A,c,A,end
 start,A,b,A,b,A,end
 start,A,b,A,b,end
 start,A,b,A,c,A,b,A,end
@@ -199,11 +197,19 @@ start-RW";
         let map = gen(EXAMPLE1);
         let start = ["start"];
         let computed: HashSet<_> =
-            super::navigate_alt(&map, "start", start.into(), start.into(), true)
+            super::navigate_part2(&map, "start", start.into(), start.into(), true)
                 .map(|p| p.join(","))
                 .collect();
 
-        let expected: HashSet<_> = PATHS1_part2.lines().map(str::to_string).collect();
+        let expected: HashSet<_> = PATHS1_P2.lines().map(str::to_string).collect();
+        println!("unexpected: ");
+        computed
+            .difference(&expected)
+            .for_each(|p| println!("{}", p));
+        println!("missing:");
+        expected
+            .difference(&computed)
+            .for_each(|p| println!("{}", p));
         assert_eq!(expected, computed);
     }
 
