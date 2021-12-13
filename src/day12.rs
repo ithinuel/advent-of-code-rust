@@ -51,7 +51,7 @@ fn navigate<'a>(
 #[aoc(day12, part1)]
 fn part1(map: &Map) -> usize {
     let start = ["start"];
-    navigate(&map, "start", start.into(), start.into()).count()
+    navigate(map, "start", start.into(), start.into()).count()
 }
 
 fn navigate_part2<'a>(
@@ -86,7 +86,7 @@ fn navigate_part2<'a>(
 #[aoc(day12, part2)]
 fn part2(map: &Map) -> usize {
     let start = ["start"];
-    navigate_part2(&map, "start", start.into(), start.into(), true).count()
+    navigate_part2(map, "start", start.into(), start.into(), true).count()
 }
 
 #[cfg(test)]

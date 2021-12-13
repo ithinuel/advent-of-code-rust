@@ -8,9 +8,11 @@ fn check_line(line: &str) -> Result<(), Either<u8, Vec<u8>>> {
         if let b'(' | b'[' | b'{' | b'<' = b {
             stack.push(b);
         } else {
-            let maybe_ok = stack.pop().map(|b2| match (b2, b) {
-                (b'(', b')') | (b'[', b']') | (b'{', b'}') | (b'<', b'>') => true,
-                _ => false,
+            let maybe_ok = stack.pop().map(|b2| {
+                matches!(
+                    (b2, b),
+                    (b'(', b')') | (b'[', b']') | (b'{', b'}') | (b'<', b'>')
+                )
             });
             if !maybe_ok.unwrap_or(true) {
                 return Err(Left(b));

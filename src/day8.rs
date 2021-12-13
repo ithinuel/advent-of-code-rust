@@ -39,7 +39,7 @@ fn part1(input: &str) -> usize {
 /// cbdef : contains (4-1) => 5
 /// acdfg : => 2
 
-fn infer<'a>(input: &'a [HashSet<u8>]) -> HashMap<usize, &'a HashSet<u8>> {
+fn infer(input: &[HashSet<u8>]) -> HashMap<usize, &'_ HashSet<u8>> {
     let first_pass: HashMap<_, _> = input
         .iter()
         .filter_map(|n| match n.len() {
@@ -110,22 +110,23 @@ fn part2(input: &str) -> usize {
 fn infer_bitmask(patterns: &[u8]) -> [u8; 10] {
     let mut result = [0; 10];
     patterns.iter().cloned().for_each(|n| {
-        match n.count_ones() {
+        if let Some(idx) = match n.count_ones() {
             5 | 6 => None,
             2 => Some(1),
             3 => Some(7),
             4 => Some(4),
             7 => Some(8),
             _ => unreachable!(),
+        } {
+            result[idx] = n
         }
-        .map(|idx| result[idx] = n);
     });
 
     let one = result[1];
     let uw = result[4] ^ one;
 
     patterns.iter().cloned().for_each(|n| {
-        match n.count_ones() {
+        if let Some(idx) = match n.count_ones() {
             6 if (n & one) != one => Some(6),
             6 if (n & uw) == uw => Some(9),
             6 => Some(0),
@@ -133,8 +134,9 @@ fn infer_bitmask(patterns: &[u8]) -> [u8; 10] {
             5 if (n & uw) == uw => Some(5),
             5 => Some(2),
             _ => None,
+        } {
+            result[idx] = n
         }
-        .map(|idx| result[idx] = n);
     });
     result
 }

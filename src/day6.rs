@@ -6,8 +6,8 @@ fn gen_part1_bruteforce(input: &str) -> Vec<usize> {
 }
 
 #[aoc(day6, part1, bruteforce)]
-fn part1_bruteforce(input: &Vec<usize>) -> usize {
-    let mut input = input.clone();
+fn part1_bruteforce(input: &[usize]) -> usize {
+    let mut input = input.to_owned();
     input.sort_unstable();
 
     for _d in 0..80 {

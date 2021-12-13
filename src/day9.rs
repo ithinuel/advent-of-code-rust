@@ -14,10 +14,10 @@ fn gen(input: &str) -> Vec<Vec<u8>> {
         .collect_vec()
 }
 
-fn get_neighbours<'a>(
-    input: &'a [Vec<u8>],
+fn get_neighbours(
+    input: &[Vec<u8>],
     (x, y): (usize, usize),
-) -> impl Iterator<Item = ((usize, usize), u8)> + 'a {
+) -> impl Iterator<Item = ((usize, usize), u8)> + '_ {
     let left_col = x.wrapping_sub(1);
     let top_line = y.wrapping_sub(1);
 
@@ -30,7 +30,7 @@ fn get_neighbours<'a>(
                 .map(|&cell| ((x, y), cell))
         })
 }
-fn find_low_points<'a>(input: &'a [Vec<u8>]) -> impl Iterator<Item = ((usize, usize), u8)> + 'a {
+fn find_low_points(input: &[Vec<u8>]) -> impl Iterator<Item = ((usize, usize), u8)> + '_ {
     input.iter().enumerate().flat_map(move |(y, line)| {
         line.iter().enumerate().filter_map(move |(x, &cell)| {
             if get_neighbours(input, (x, y)).all(|(_, cell2)| cell < cell2) {
