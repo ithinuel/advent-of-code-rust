@@ -47,10 +47,7 @@ fn gen(input: &str) -> Gen {
 #[aoc(day13, part1)]
 fn part1((map, instr): &Gen) -> usize {
     let &line = instr.first().unwrap();
-    map.into_iter()
-        .map(|&coord| line.fold(coord))
-        .unique()
-        .count()
+    map.iter().map(|&coord| line.fold(coord)).unique().count()
 }
 
 #[derive(PartialEq)]
@@ -62,10 +59,10 @@ impl std::fmt::Debug for Map {
         });
         for (y, x) in (0..=max_y).cartesian_product(0..=max_x) {
             match self.0.get(&(x, y)) {
-                Some(_) => write!(f, "*")?,
-                None => write!(f, " ")?,
+                Some(_) => write!(f, "#")?,
+                None => write!(f, ".")?,
             }
-            if x == max_x {
+            if x == max_x && y != max_y {
                 writeln!(f)?
             }
         }
@@ -75,21 +72,50 @@ impl std::fmt::Debug for Map {
 impl std::fmt::Display for Map {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(f)?;
-        write!(f, "{:?}", self)
+        writeln!(f, "{:?}", self)
     }
 }
-
 #[aoc(day13, part2)]
 fn part2((map, instr): &Gen) -> Map {
-    Map(instr.into_iter().fold(map.clone(), |map, &line| {
+    Map(instr.iter().fold(map.clone(), |map, &line| {
+        map.into_iter().map(|coord| line.fold(coord)).collect()
+    }))
+}
+
+struct Map2(BTreeSet<(i32, i32)>);
+impl std::fmt::Debug for Map2 {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let (max_x, max_y) = self.0.iter().fold((0, 0), |(col, line), &(x, y)| {
+            (i32::max(col, x), i32::max(line, y))
+        });
+        let (len_x, len_y) = ((max_x + 1) as usize, (max_y + 1) as usize);
+
+        let mut output = vec![b'.'; len_x * len_y];
+        for &(x, y) in &self.0 {
+            let (x, y) = (x as usize, y as usize);
+            output[x + y * len_x] = b'#';
+        }
+        write!(
+            f,
+            "{}",
+            output.chunks(len_x).map(String::from_utf8_lossy).join("\n")
+        )
+    }
+}
+impl std::fmt::Display for Map2 {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        writeln!(f, "{:?}", self)
+    }
+}
+#[aoc(day13, part2, buffered_output)]
+fn part2_buffered((map, instr): &Gen) -> Map2 {
+    Map2(instr.iter().fold(map.clone(), |map, &line| {
         map.into_iter().map(|coord| line.fold(coord)).collect()
     }))
 }
 
 #[cfg(test)]
 mod test {
-    use itertools::Itertools;
-
     use super::gen;
 
     const EXAMPLE: &str = r"6,10
@@ -114,22 +140,11 @@ mod test {
 fold along y=7
 fold along x=5";
 
-    const EXPECT: &str = r"0,0
-1,0
-2,0
-3,0
-4,0
-0,1
-4,1
-0,2
-4,2
-0,3
-4,3
-0,4
-1,4
-2,4
-3,4
-4,4";
+    const EXPECT: &str = r"#####
+#...#
+#...#
+#...#
+#####";
 
     #[test]
     fn part1() {
@@ -137,12 +152,13 @@ fold along x=5";
     }
     #[test]
     fn part2() {
-        let expect = super::Map(
-            EXPECT
-                .lines()
-                .filter_map(|l| l.split(',').filter_map(|v| v.parse().ok()).next_tuple())
-                .collect(),
+        assert_eq!(EXPECT, format!("{:?}", super::part2(&gen(EXAMPLE))));
+    }
+    #[test]
+    fn part2_buffered() {
+        assert_eq!(
+            EXPECT,
+            format!("{:?}", super::part2_buffered(&gen(EXAMPLE)))
         );
-        assert_eq!(expect, super::part2(&gen(EXAMPLE)));
     }
 }
