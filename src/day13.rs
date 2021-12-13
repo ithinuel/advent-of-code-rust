@@ -1,4 +1,4 @@
-use std::collections::BTreeSet;
+use std::{borrow::Cow, collections::BTreeSet};
 
 use aoc_runner_derive::*;
 use itertools::Itertools;
@@ -18,10 +18,20 @@ impl Fold {
     }
 }
 type Gen = (BTreeSet<Coord>, Vec<Fold>);
+macro_rules! impl_display {
+    ($t:ty) => {
+        impl std::fmt::Display for $t {
+            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                writeln!(f)?;
+                writeln!(f, "{:?}", self)
+            }
+        }
+    };
+}
 
 #[aoc_generator(day13)]
 fn gen(input: &str) -> Gen {
-    let (dots, instr) = input.split("\n\n").next_tuple().unwrap();
+    let (dots, instr) = input.split("\n\n").next_tuple().expect("Invalid format");
     let map = dots
         .lines()
         .filter_map(|l| l.split(',').filter_map(|v| v.parse().ok()).next_tuple())
@@ -46,7 +56,7 @@ fn gen(input: &str) -> Gen {
 
 #[aoc(day13, part1)]
 fn part1((map, instr): &Gen) -> usize {
-    let &line = instr.first().unwrap();
+    let &line = instr.first().expect("Invalid input");
     map.iter().map(|&coord| line.fold(coord)).unique().count()
 }
 
@@ -69,12 +79,7 @@ impl std::fmt::Debug for Map {
         Ok(())
     }
 }
-impl std::fmt::Display for Map {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        writeln!(f)?;
-        writeln!(f, "{:?}", self)
-    }
-}
+impl_display!(Map);
 #[aoc(day13, part2)]
 fn part2((map, instr): &Gen) -> Map {
     Map(instr.iter().fold(map.clone(), |map, &line| {
@@ -82,8 +87,8 @@ fn part2((map, instr): &Gen) -> Map {
     }))
 }
 
-struct Map2(BTreeSet<(i32, i32)>);
-impl std::fmt::Debug for Map2 {
+struct BufferedMap(BTreeSet<(i32, i32)>);
+impl std::fmt::Debug for BufferedMap {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let (max_x, max_y) = self.0.iter().fold((0, 0), |(col, line), &(x, y)| {
             (i32::max(col, x), i32::max(line, y))
@@ -95,21 +100,17 @@ impl std::fmt::Debug for Map2 {
             let (x, y) = (x as usize, y as usize);
             output[x + y * len_x] = b'#';
         }
-        write!(
-            f,
-            "{}",
-            output.chunks(len_x).map(String::from_utf8_lossy).join("\n")
+        itertools::intersperse(
+            output.chunks(len_x).map(String::from_utf8_lossy),
+            Cow::Borrowed("\n"),
         )
+        .try_for_each(|s| write!(f, "{}", s))
     }
 }
-impl std::fmt::Display for Map2 {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        writeln!(f, "{:?}", self)
-    }
-}
+impl_display!(BufferedMap);
 #[aoc(day13, part2, buffered_output)]
-fn part2_buffered((map, instr): &Gen) -> Map2 {
-    Map2(instr.iter().fold(map.clone(), |map, &line| {
+fn part2_buffered((map, instr): &Gen) -> BufferedMap {
+    BufferedMap(instr.iter().fold(map.clone(), |map, &line| {
         map.into_iter().map(|coord| line.fold(coord)).collect()
     }))
 }
