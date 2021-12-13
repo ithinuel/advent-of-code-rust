@@ -53,32 +53,29 @@ fn part1((map, instr): &Gen) -> usize {
         .count()
 }
 
-fn print(map: &BTreeSet<Coord>, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-    let (max_x, max_y) = map.iter().fold((0, 0), |(col, line), &(x, y)| {
-        (i32::max(col, x), i32::max(line, y))
-    });
-    for (y, x) in (0..=max_y).cartesian_product(0..=max_x) {
-        match map.get(&(x, y)) {
-            Some(_) => write!(f, "*")?,
-            None => write!(f, " ")?,
-        }
-        if x == max_x {
-            writeln!(f)?
-        }
-    }
-    Ok(())
-}
 #[derive(PartialEq)]
 struct Map(BTreeSet<Coord>);
 impl std::fmt::Debug for Map {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        print(&self.0, f)
+        let (max_x, max_y) = self.0.iter().fold((0, 0), |(col, line), &(x, y)| {
+            (i32::max(col, x), i32::max(line, y))
+        });
+        for (y, x) in (0..=max_y).cartesian_product(0..=max_x) {
+            match self.0.get(&(x, y)) {
+                Some(_) => write!(f, "*")?,
+                None => write!(f, " ")?,
+            }
+            if x == max_x {
+                writeln!(f)?
+            }
+        }
+        Ok(())
     }
 }
 impl std::fmt::Display for Map {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(f)?;
-        print(&self.0, f)
+        write!(f, "{:?}", self)
     }
 }
 
