@@ -47,8 +47,10 @@ fn gen(input: &str) -> Gen {
 #[aoc(day13, part1)]
 fn part1((map, instr): &Gen) -> usize {
     let &line = instr.first().unwrap();
-    let map: BTreeSet<_> = map.into_iter().map(|&coord| line.fold(coord)).collect();
-    map.len()
+    map.into_iter()
+        .map(|&coord| line.fold(coord))
+        .unique()
+        .count()
 }
 
 fn print(map: &BTreeSet<Coord>, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
