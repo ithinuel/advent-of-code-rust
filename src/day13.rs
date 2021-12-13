@@ -4,16 +4,21 @@ use aoc_runner_derive::*;
 use itertools::Itertools;
 
 type Coord = (i32, i32);
-
-type Gen = (BTreeSet<Coord>, Vec<Coord>);
-
-fn fold((col, line): Coord, (x, y): Coord) -> Coord {
-    if col == 0 {
-        (x, line - (line - y).abs())
-    } else {
-        (col - (col - x).abs(), y)
+#[derive(Copy, Clone, Debug)]
+enum Fold {
+    Col(i32),
+    Line(i32),
+}
+impl Fold {
+    fn fold(&self, (x, y): Coord) -> Coord {
+        match &self {
+            Fold::Line(line) => (x, line - (line - y).abs()),
+            Fold::Col(col) => (col - (col - x).abs(), y),
+        }
     }
 }
+type Gen = (BTreeSet<Coord>, Vec<Fold>);
+
 #[aoc_generator(day13)]
 fn gen(input: &str) -> Gen {
     let (dots, instr) = input.split("\n\n").next_tuple().unwrap();
@@ -28,10 +33,10 @@ fn gen(input: &str) -> Gen {
                 .trim_start_matches("fold along ")
                 .split('=')
                 .next_tuple()?;
-            let val: i32 = val.parse().ok()?;
+            let val = val.parse().ok()?;
             Some(match axis {
-                "x" => (val, 0),
-                "y" => (0, val),
+                "x" => Fold::Col(val),
+                "y" => Fold::Line(val),
                 _ => unreachable!(),
             })
         })
@@ -41,11 +46,8 @@ fn gen(input: &str) -> Gen {
 
 #[aoc(day13, part1)]
 fn part1((map, instr): &Gen) -> usize {
-    let &fold_line = instr.first().unwrap();
-    let map: BTreeSet<_> = map
-        .into_iter()
-        .map(|&coord| fold(fold_line, coord))
-        .collect();
+    let &line = instr.first().unwrap();
+    let map: BTreeSet<_> = map.into_iter().map(|&coord| line.fold(coord)).collect();
     map.len()
 }
 
@@ -55,7 +57,7 @@ fn print(map: &BTreeSet<Coord>, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Re
     });
     for (y, x) in (0..=max_y).cartesian_product(0..=max_x) {
         match map.get(&(x, y)) {
-            Some(_) => write!(f, "#")?,
+            Some(_) => write!(f, "*")?,
             None => write!(f, " ")?,
         }
         if x == max_x {
@@ -64,7 +66,6 @@ fn print(map: &BTreeSet<Coord>, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Re
     }
     Ok(())
 }
-
 #[derive(PartialEq)]
 struct Map(BTreeSet<Coord>);
 impl std::fmt::Debug for Map {
@@ -81,12 +82,9 @@ impl std::fmt::Display for Map {
 
 #[aoc(day13, part2)]
 fn part2((map, instr): &Gen) -> Map {
-    let map: BTreeSet<_> = instr.into_iter().fold(map.clone(), |map, &fold_line| {
-        map.into_iter()
-            .map(|coord| fold(fold_line, coord))
-            .collect()
-    });
-    Map(map)
+    Map(instr.into_iter().fold(map.clone(), |map, &line| {
+        map.into_iter().map(|coord| line.fold(coord)).collect()
+    }))
 }
 
 #[cfg(test)]
