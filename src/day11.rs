@@ -59,15 +59,13 @@ fn part1(input: &Map) -> usize {
 }
 
 #[aoc(day11, part2)]
-fn part2(input: &Map) -> usize {
+fn part2(input: &Map) -> Option<usize> {
     let mut map = input.clone();
-    (1..)
-        .find(|_| {
-            step(&mut map);
+    (1..5000).find(|_| {
+        step(&mut map);
 
-            map.iter().flat_map(|l| l.iter()).all(|&b| b == 0)
-        })
-        .unwrap()
+        map.iter().flat_map(|l| l.iter()).all(|&b| b == 0)
+    })
 }
 
 #[cfg(test)]
@@ -212,6 +210,6 @@ mod test {
 
     #[test]
     fn part2() {
-        assert_eq!(195, super::part2(&gen(EXAMPLE)));
+        assert_eq!(Some(195), super::part2(&gen(EXAMPLE)));
     }
 }
