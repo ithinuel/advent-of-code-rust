@@ -62,6 +62,7 @@ fn part2(input: &Gen) -> Option<usize> {
         new_cnt
     });
 
+    let last = seed.last().copied();
     population
         .keys()
         .flat_map(|&(a, b)| [a, b].into_iter())
@@ -71,7 +72,7 @@ fn part2(input: &Gen) -> Option<usize> {
                 .iter()
                 .filter_map(|(&(s, _), &count)| (s == e).then(|| count))
                 .sum::<usize>()
-                + if seed.last() == Some(&e) { 1 } else { 0 }
+                + if last == Some(e) { 1 } else { 0 }
         })
         .minmax()
         .into_option()
