@@ -7,7 +7,7 @@ fn gen(input: &str) -> (Vec<u32>, Vec<Board>) {
     let mut blocks = input.split("\n\n");
     let random_numbers: Vec<u32> = blocks
         .next()
-        .unwrap()
+        .expect("Invalid format")
         .split(',')
         .filter_map(|n| n.parse().ok())
         .collect();

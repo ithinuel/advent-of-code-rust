@@ -82,7 +82,7 @@ fn part2(input: &str) -> usize {
     input
         .lines()
         .map(|line| {
-            let (patterns, digits) = line.split(" | ").next_tuple().unwrap();
+            let (patterns, digits) = line.split(" | ").next_tuple().expect("Invalid format");
             let patterns: Vec<HashSet<_>> = patterns
                 .split_ascii_whitespace()
                 .map(|n| n.bytes().collect())
@@ -96,12 +96,7 @@ fn part2(input: &str) -> usize {
 
             digits
                 .iter()
-                .map(|digit| {
-                    map.iter()
-                        .find(|(_, &pat)| pat == digit)
-                        .map(|(&k, _)| k)
-                        .unwrap()
-                })
+                .filter_map(|digit| map.iter().find(|(_, &pat)| pat == digit).map(|(&k, _)| k))
                 .fold(0, |acc, d| acc * 10 + d)
         })
         .sum()
@@ -161,15 +156,15 @@ fn part2_bitmask(input: &str) -> u32 {
     input
         .lines()
         .map(|line| {
-            let (patterns, digits) = line.split(" | ").next_tuple().unwrap();
+            let (patterns, digits) = line.split(" | ").next_tuple().expect("Invalid format");
             let patterns: Vec<u8> = patterns.split_ascii_whitespace().map(to_bitmask).collect();
 
             let map = infer_bitmask(&patterns);
             digits
                 .split_ascii_whitespace()
                 .map(to_bitmask)
-                .map(|n| map.iter().find_position(|&&m| n == m).unwrap().0 as u32)
-                .fold(0, |acc, n| acc * 10 + n)
+                .filter_map(|n| map.iter().find_position(|&&m| n == m))
+                .fold(0, |acc, n| acc * 10 + n.0 as u32)
         })
         .sum()
 }
@@ -231,7 +226,7 @@ fn part2_bitmask_transposed(input: &str) -> u32 {
     input
         .lines()
         .map(|line| {
-            let (patterns, digits) = line.split(" | ").next_tuple().unwrap();
+            let (patterns, digits) = line.split(" | ").next_tuple().expect("Invalid format");
             let patterns: Vec<u8> = patterns.split_ascii_whitespace().map(to_bitmask).collect();
 
             let map = infer_bitmask_transposed(&patterns);
@@ -239,7 +234,7 @@ fn part2_bitmask_transposed(input: &str) -> u32 {
                 .split_ascii_whitespace()
                 .map(to_bitmask)
                 .map(usize::from)
-                .map(|v| map[v].unwrap())
+                .filter_map(|v| map[v])
                 .fold(0, |acc, n| acc * 10 + n)
         })
         .sum()
