@@ -17,14 +17,14 @@ fn part1(input: &[i32]) -> i32 {
             acc += 1;
             acc >= (input.len() / 2)
         })
-        .unwrap();
+        .expect("Not median found");
 
     input.iter().map(|n| (n - median).abs()).sum()
 }
 
 #[aoc(day7, part2)]
-fn part2(input: &[i32]) -> i32 {
-    let max = *input.iter().max().unwrap();
+fn part2(input: &[i32]) -> Option<i32> {
+    let max = *input.iter().max()?;
     (0..max)
         .map(|pos| {
             input
@@ -34,7 +34,6 @@ fn part2(input: &[i32]) -> i32 {
                 .sum()
         })
         .min()
-        .unwrap()
 }
 
 #[cfg(test)]
@@ -50,6 +49,6 @@ mod test {
 
     #[test]
     fn part2() {
-        assert_eq!(168, super::part2(&gen(EXAMPLE)));
+        assert_eq!(Some(168), super::part2(&gen(EXAMPLE)));
     }
 }
