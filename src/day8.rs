@@ -168,7 +168,7 @@ fn part2_bitmask(input: &str) -> u32 {
             digits
                 .split_ascii_whitespace()
                 .map(to_bitmask)
-                .map(|n| map.iter().cloned().find_position(|&m| n == m).unwrap().0 as u32)
+                .map(|n| map.iter().find_position(|&&m| n == m).unwrap().0 as u32)
                 .fold(0, |acc, n| acc * 10 + n)
         })
         .sum()

@@ -8,19 +8,11 @@ fn gen_part1_bruteforce(input: &str) -> Vec<usize> {
 #[aoc(day6, part1, bruteforce)]
 fn part1_bruteforce(input: &[usize]) -> usize {
     let mut input = input.to_owned();
-    input.sort_unstable();
 
     for _d in 0..80 {
-        let new_cnt = input.iter().enumerate().find(|(_, &n)| n >= 1).unwrap().0;
-        if new_cnt > 0 {
-            input.drain(0..new_cnt);
-        }
-        input.iter_mut().for_each(|n| *n -= 1);
-        for _ in 0..new_cnt {
-            input.push(8);
-            input.push(6);
-        }
-        input.sort_unstable();
+        let len = input.len();
+        input = input.drain(..).filter(|&n| n > 0).map(|n| n - 1).collect();
+        input.extend(std::iter::repeat([6, 8]).take(len - input.len()).flatten());
     }
     input.len()
 }
