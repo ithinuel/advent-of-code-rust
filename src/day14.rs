@@ -1,6 +1,6 @@
 use aoc_runner_derive::*;
 use itertools::Itertools;
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 type Gen = (Vec<u8>, BTreeMap<(u8, u8), u8>);
 
 #[aoc_generator(day14)]
@@ -18,7 +18,7 @@ fn gen(input: &str) -> Gen {
 }
 
 #[aoc(day14, part1)]
-fn part1(input: &Gen) -> usize {
+fn part1(input: &Gen) -> Option<usize> {
     let (seed, rules) = input;
     let chain = (1..=10).fold(seed.clone(), |seed, _| {
         seed.iter()
@@ -28,23 +28,21 @@ fn part1(input: &Gen) -> usize {
                 let &new = rules.get(&(s, e)).expect("Unknown pair");
                 [s, new].into_iter()
             })
-            .chain(seed.iter().copied().last())
-            .collect::<Vec<u8>>()
+            .chain(seed.last().copied())
+            .collect()
     });
 
-    let elements: BTreeSet<_> = chain.iter().copied().collect();
-
-    elements
+    chain
         .iter()
-        .map(|&b| chain.iter().filter(|&&e| e == b).count())
+        .unique()
+        .map(|&e1| chain.iter().filter(|&&e2| e1 == e2).count())
         .minmax()
         .into_option()
         .map(|(min, max)| max - min)
-        .unwrap()
 }
 
 #[aoc(day14, part2)]
-fn part2(input: &Gen) -> usize {
+fn part2(input: &Gen) -> Option<usize> {
     let (seed, rules) = input;
 
     let mut population: BTreeMap<(_, _), _> = BTreeMap::new();
@@ -55,11 +53,11 @@ fn part2(input: &Gen) -> usize {
     let population = (1..=40).fold(population, |population, _| {
         let mut new_cnt = BTreeMap::new();
 
-        for ((a, b), count) in population.into_iter() {
+        population.into_iter().for_each(|((a, b), count)| {
             let &c = rules.get(&(a, b)).expect("Unknown pair");
             *new_cnt.entry((a, c)).or_insert(0) += count;
             *new_cnt.entry((c, b)).or_insert(0) += count;
-        }
+        });
 
         new_cnt
     });
@@ -73,12 +71,11 @@ fn part2(input: &Gen) -> usize {
                 .iter()
                 .filter_map(|(&(s, _), &count)| (s == e).then(|| count))
                 .sum::<usize>()
-                + if Some(&e) == seed.iter().last() { 1 } else { 0 }
+                + if seed.last() == Some(&e) { 1 } else { 0 }
         })
         .minmax()
         .into_option()
         .map(|(min, max)| max - min)
-        .unwrap()
 }
 
 #[cfg(test)]
@@ -105,11 +102,11 @@ CN -> C";
 
     #[test]
     fn part1() {
-        assert_eq!(1588, super::part1(&gen(EXAMPLE)));
+        assert_eq!(Some(1588), super::part1(&gen(EXAMPLE)));
     }
 
     #[test]
     fn part2() {
-        assert_eq!(2188189693529, super::part2(&gen(EXAMPLE)));
+        assert_eq!(Some(2188189693529), super::part2(&gen(EXAMPLE)));
     }
 }
