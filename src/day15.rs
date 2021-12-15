@@ -1,5 +1,5 @@
 use aoc_runner_derive::*;
-use std::collections::{BTreeMap, BTreeSet};
+use std::{cmp::Reverse, collections::BTreeMap};
 
 type Map = Vec<Vec<usize>>;
 type Coord = (usize, usize);
@@ -32,13 +32,13 @@ fn a_star<T>(
 where
     T: Iterator<Item = Coord>,
 {
-    let mut open = BTreeSet::new();
+    let mut open = priority_queue::PriorityQueue::new();
     let mut came_from: BTreeMap<Coord, Coord> = BTreeMap::new();
 
     let mut g_score = BTreeMap::new();
     let mut f_score = BTreeMap::new();
 
-    open.insert(origin);
+    open.push(origin, Reverse(0));
     g_score.insert(origin, 0);
     f_score.insert(origin, heuristic(origin));
 
@@ -46,7 +46,7 @@ where
         score_map.get(&node).copied().unwrap_or(usize::max_value())
     }
 
-    while let Some(&current) = open.iter().min_by_key(|&&k| score(&f_score, k)) {
+    while let Some((current, _)) = open.pop() {
         if current == target {
             // rebuild path
             //let mut current = current;
@@ -59,15 +59,16 @@ where
             return Ok(score(&g_score, target));
         }
 
-        open.remove(&current);
         let current_g_score = score(&g_score, current);
         for neighbour in neighbours(current) {
             let tentative_g_score = current_g_score + distance(current, neighbour);
             if tentative_g_score < score(&g_score, neighbour) {
+                let tentative_f_score = tentative_g_score + heuristic(neighbour);
+
                 came_from.insert(neighbour, current);
                 g_score.insert(neighbour, tentative_g_score);
-                f_score.insert(neighbour, tentative_g_score + heuristic(neighbour));
-                open.insert(neighbour);
+                f_score.insert(neighbour, tentative_f_score);
+                open.push(neighbour, Reverse(tentative_f_score));
             }
         }
     }

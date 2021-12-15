@@ -14,6 +14,7 @@ aoc-runner = "*"
 aoc-runner-derive = { version = "*" }
 bitvec = "0.20"
 arrayvec = "0.7.2"
+priority-queue = "*"
 
 [dev-dependencies]
 rayon = "*"
