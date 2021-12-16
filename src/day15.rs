@@ -101,11 +101,7 @@ fn gen_part2(input: &str) -> Map {
                     .flat_map(|rcol| {
                         line.iter().copied().map(move |risk| {
                             let risk = rline + rcol + risk;
-                            if risk <= 9 {
-                                risk
-                            } else {
-                                risk % 10 + 1
-                            }
+                            risk - if risk > 9 { 9 } else { 0 }
                         })
                     })
                     .collect()
