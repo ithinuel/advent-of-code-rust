@@ -2,7 +2,7 @@ use aoc_runner_derive::*;
 use itertools::Itertools;
 
 #[derive(Debug)]
-enum Operation {
+enum Operator {
     Sum,
     Product,
     Minimum,
@@ -15,8 +15,8 @@ enum Operation {
 #[derive(Debug)]
 enum Payload {
     Literals(u32),
-    Operator {
-        op: Operation,
+    Operation {
+        operator: Operator,
         operands: Vec<Packet>,
     },
 }
@@ -30,64 +30,64 @@ impl Packet {
     fn compute(&self) -> u32 {
         match &self.payload {
             Payload::Literals(v) => *v,
-            Payload::Operator { op, operands } => {
-                let mut operands = operands.iter().map(|op| op.compute());
-                match op {
-                    Operation::Sum => operands.sum(),
-                    Operation::Product => operands.product(),
-                    Operation::Minimum => operands.min().expect("No operands!"),
-                    Operation::Maximum => operands.max().expect("No operands!"),
-                    Operation::GreaterThan => {
-                        let (a, b) = operands.next_tuple().expect("Missin operands");
-                        assert_eq!(None, operands.next(), "Unexpected extra operand");
+            Payload::Operation {
+                operator: op,
+                operands,
+            } => {
+                let operands = operands.iter().map(|op| op.compute()).collect_vec();
+                match (op, operands.as_slice()) {
+                    (Operator::Sum, _) => operands.into_iter().sum(),
+                    (Operator::Product, _) => operands.into_iter().product(),
+                    (Operator::Minimum, _) => operands.into_iter().min().expect("No operands!"),
+                    (Operator::Maximum, _) => operands.into_iter().max().expect("No operands!"),
+                    (Operator::GreaterThan, [a, b]) => {
                         if a > b {
                             1
                         } else {
                             0
                         }
                     }
-                    Operation::LessThan => {
-                        let (a, b) = operands.next_tuple().expect("Missin operands");
-                        assert_eq!(operands.next(), None);
+                    (Operator::LessThan, [a, b]) => {
                         if a < b {
                             1
                         } else {
                             0
                         }
                     }
-                    Operation::EqualTo => {
-                        let (a, b) = operands.next_tuple().expect("Missin operands");
-                        assert_eq!(operands.next(), None);
+                    (Operator::EqualTo, [a, b]) => {
                         if a == b {
                             1
                         } else {
                             0
                         }
                     }
+                    _ => unreachable!(),
                 }
             }
         }
     }
 }
 
-fn read<T>(bits: usize, stream: &mut T) -> u32
-where
-    T: Iterator<Item = u32>,
-    T: ?Sized,
-{
-    stream.take(bits).fold(0, |acc, b| acc << 1 | b)
+fn read(bits: usize, stream: &mut (impl Iterator<Item = u32> + ?Sized)) -> Option<u32> {
+    let mut cnt = 0;
+    let v = stream.take(bits).fold(0, |acc, b| {
+        cnt += 1;
+        acc << 1 | b
+    });
+    (cnt == bits).then(|| v)
 }
 
 fn parse_packet(it: &mut (dyn Iterator<Item = u32>)) -> Option<Packet> {
-    let version = read(3, it);
-    let type_id = read(3, it);
+    let version = read(3, it)?;
+    let type_id = read(3, it)?;
     let payload = match type_id {
         4 => {
             let mut literal = 0;
-            while let Some(cont) = it.next() {
-                let val = read(4, it);
-                literal = literal * 16 + val;
-                if cont == 0 {
+            let mut it = it.batching(|it| read(5, it));
+            loop {
+                let b = it.next()?;
+                literal = literal << 4 | (b & 0xF);
+                if (b & 0x10) == 0 {
                     break;
                 }
             }
@@ -95,23 +95,33 @@ fn parse_packet(it: &mut (dyn Iterator<Item = u32>)) -> Option<Packet> {
         }
         op_code => {
             let op = match op_code {
-                0 => Operation::Sum,
-                1 => Operation::Product,
-                2 => Operation::Minimum,
-                3 => Operation::Maximum,
-                5 => Operation::GreaterThan,
-                6 => Operation::LessThan,
-                7 => Operation::EqualTo,
+                0 => Operator::Sum,
+                1 => Operator::Product,
+                2 => Operator::Minimum,
+                3 => Operator::Maximum,
+                5 => Operator::GreaterThan,
+                6 => Operator::LessThan,
+                7 => Operator::EqualTo,
                 _ => unreachable!(),
             };
             let operands = if it.next()? == 1 {
-                let pkt_count = read(11, it) as usize;
-                it.batching(|it| parse_packet(it)).take(pkt_count).collect()
+                let pkt_count = read(11, it)? as usize;
+                let ops: Vec<_> = it.batching(|it| parse_packet(it)).take(pkt_count).collect();
+                (ops.len() == pkt_count).then(|| ops)
             } else {
-                let payld_len = read(15, it) as usize;
-                it.take(payld_len).batching(|it| parse_packet(it)).collect()
-            };
-            Payload::Operator { op, operands }
+                let pld_len = read(15, it)? as usize;
+                let mut cnt = 0;
+                let ops = it
+                    .take(pld_len)
+                    .inspect(|_| cnt += 1)
+                    .batching(|it| parse_packet(it))
+                    .collect();
+                (cnt == pld_len).then(|| ops)
+            }?;
+            Payload::Operation {
+                operator: op,
+                operands,
+            }
         }
     };
     Some(Packet { version, payload })
@@ -121,7 +131,7 @@ fn sum_versions(pkt: &Packet) -> u32 {
     pkt.version
         + match &pkt.payload {
             Payload::Literals(_) => 0,
-            Payload::Operator { operands, .. } => operands.iter().map(sum_versions).sum(),
+            Payload::Operation { operands, .. } => operands.iter().map(sum_versions).sum(),
         }
 }
 
