@@ -40,27 +40,9 @@ impl Packet {
                     (Operator::Product, _) => operands.into_iter().product(),
                     (Operator::Minimum, _) => operands.into_iter().min().expect("No operands!"),
                     (Operator::Maximum, _) => operands.into_iter().max().expect("No operands!"),
-                    (Operator::GreaterThan, [a, b]) => {
-                        if a > b {
-                            1
-                        } else {
-                            0
-                        }
-                    }
-                    (Operator::LessThan, [a, b]) => {
-                        if a < b {
-                            1
-                        } else {
-                            0
-                        }
-                    }
-                    (Operator::EqualTo, [a, b]) => {
-                        if a == b {
-                            1
-                        } else {
-                            0
-                        }
-                    }
+                    (Operator::GreaterThan, [a, b]) => (a > b) as u32,
+                    (Operator::LessThan, [a, b]) => (a < b) as u32,
+                    (Operator::EqualTo, [a, b]) => (a == b) as u32,
                     _ => unreachable!(),
                 }
             }
