@@ -1,4 +1,4 @@
-use std::ops::RangeInclusive;
+use std::{collections::BTreeSet, ops::RangeInclusive};
 
 use aoc_runner_derive::*;
 use itertools::Itertools;
@@ -119,6 +119,57 @@ fn part2(target: &Input) -> usize {
         .count()
 }
 
+#[aoc(day17, part2, faster)]
+fn part2_faster(target: &Input) -> usize {
+    let possible_dx: BTreeSet<_> = (1..=*target.0.end())
+        .cartesian_product(0..1000)
+        .filter_map(|(dx, step)| {
+            // speed(step) = dx - step
+            // primitive(speed, step) = dx*step - step*step/2 + constant
+            //   for some reason this is slightly off so using:
+            //   dx*step - step*step/2 + step/2
+            let clamped_step = step.clamp(0, dx);
+            let (end_speed, distance) = (
+                dx - clamped_step,
+                clamped_step * (2 * dx - clamped_step + 1) / 2,
+            );
+
+            target
+                .0
+                .contains(&distance)
+                .then(|| (dx, step, end_speed, distance))
+        })
+        .unique()
+        .sorted()
+        .collect();
+
+    let max_step = possible_dx.iter().max_by_key(|v| v.1).unwrap().1;
+    let possible_dy: BTreeSet<_> = (*target.1.start()..1000)
+        .cartesian_product(1..=max_step)
+        .map(|(dy, step)| {
+            // same principle as for dx
+            let signed_step = step as i32;
+            let (end_speed, depth) = (
+                dy - signed_step,
+                signed_step * (2 * dy - signed_step + 1) / 2,
+            );
+
+            (dy, step, end_speed, depth)
+        })
+        .filter(|(_, _, _, depth)| target.1.contains(depth))
+        .collect();
+
+    // build all dx,dy pair hitting the target at the same step.
+    // SQL's  INNER JOIN on step count.
+    possible_dx
+        .iter()
+        .cartesian_product(possible_dy.iter())
+        .filter(|((_, step_x, _, _), (_, step_y, _, _))| step_x == step_y)
+        .map(|(x, y)| (x.0, y.0))
+        .unique()
+        .count()
+}
+
 #[cfg(test)]
 mod test {
     use super::gen;
@@ -134,5 +185,9 @@ mod test {
     #[cfg_attr(debug_assertions, ignore)]
     fn part2() {
         assert_eq!(Some(112), gen(EXAMPLE).as_ref().map(super::part2));
+    }
+    #[test]
+    fn part2_faster() {
+        assert_eq!(Some(112), gen(EXAMPLE).as_ref().map(super::part2_faster));
     }
 }
