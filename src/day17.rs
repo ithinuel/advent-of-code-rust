@@ -144,16 +144,21 @@ fn part2_faster(target: &Input) -> usize {
     // no point in looking up for dy steps that will never be matched by dx_steps.
     let max_step = possible_dx.iter().max_by_key(|v| v.1).unwrap().1;
     let possible_dy: BTreeSet<_> = (*target.1.start()..1000)
-        .cartesian_product(1..=max_step)
-        .map(|(dy, step)| {
-            // same principle as for dx
-            let signed_step = step as i32;
-            let (end_speed, depth) = (
-                dy - signed_step,
-                signed_step * (2 * dy - signed_step + 1) / 2,
-            );
+        .flat_map(|dy| {
+            (1..=max_step)
+                .map(move |step| {
+                    // same principle as for dx
+                    let signed_step = step as i32;
+                    let (end_speed, depth) = (
+                        dy - signed_step,
+                        signed_step * (2 * dy - signed_step + 1) / 2,
+                    );
 
-            (dy, step, end_speed, depth)
+                    (dy, step, end_speed, depth)
+                })
+                // skip remaining steps once we passed under the target area, there's no way to come
+                // back up
+                .take_while(|(_, _, _, depth)| depth >= target.1.start())
         })
         .filter(|(_, _, _, depth)| target.1.contains(depth))
         .collect();
