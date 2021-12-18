@@ -40,20 +40,14 @@ impl SFNElem {
                     Explosion::None => {}
                     other => return other,
                 }
-                //print!("{}: Branch({:?}) => ", depth, child);
-                let r = if depth >= 4 {
-                    match (&child.a, &child.b) {
-                        (&SFNElem::Leaf(a), &SFNElem::Leaf(b)) => {
-                            *self = 0u8.into();
-                            Explosion::Detonate(a, b)
-                        }
-                        _ => unreachable!(),
+                match (&child.a, &child.b) {
+                    (&SFNElem::Leaf(a), &SFNElem::Leaf(b)) if depth >= 4 => {
+                        *self = 0u8.into();
+                        Explosion::Detonate(a, b)
                     }
-                } else {
-                    Explosion::None
-                };
-                //println!("{:?}", r);
-                r
+                    (_, _) if depth >= 4 => unreachable!(),
+                    _ => Explosion::None,
+                }
             }
         }
     }
@@ -69,7 +63,6 @@ impl SFNElem {
     }
 
     fn propagate(&mut self, v: u8, direction: PropagationDir) {
-        //println!("propagate {} to the {:?} of {:?}", v, direction, self);
         match self {
             SFNElem::Leaf(value) => *value += v,
             SFNElem::Branch(child) => match direction {
@@ -154,7 +147,6 @@ impl SnailFishNumber {
         v
     }
     fn parse_internal(input: &[u8], depth: usize) -> (Self, usize) {
-        ////println!("{}: parsing: {}", depth, String::from_utf8_lossy(input));
         assert_eq!(b'[', input[0]);
         let a_start = 1;
         let (a, a_end) = if input[a_start].is_ascii_digit() {
@@ -164,7 +156,6 @@ impl SnailFishNumber {
             let (v, end) = Self::parse_internal(&input[1..], depth + 1);
             (v.into(), a_start + end)
         };
-        ////println!("{}: parsed a: {:?}, end at {}", depth, a, a_end);
         assert_eq!(b',', input[a_end + 1]);
         let b_start = a_end + 2;
         let (b, b_end) = if input[b_start].is_ascii_digit() {
@@ -174,7 +165,6 @@ impl SnailFishNumber {
             let (v, end) = Self::parse_internal(&input[b_start..], depth + 1);
             (v.into(), b_start + end)
         };
-        ////println!("{}: parsed b: {:?}, end at {}", depth, b, b_end);
         assert_eq!(b']', input[b_end + 1]);
 
         (Self { a, b }, b_end + 1)
@@ -182,22 +172,13 @@ impl SnailFishNumber {
 
     fn reduce(&mut self) {
         loop {
-            match self.explode(1) {
-                Explosion::None => {
-                    if self.split() == Split::None {
-                        break;
-                    }
-                }
-                _other => {
-                    //println!("explosion: {:?} -- {:?}", self, _other),
-                }
+            if self.explode(1) == Explosion::None && self.split() == Split::None {
+                break;
             }
-            //println!("=====")
         }
     }
 
     fn explode(&mut self, depth: usize) -> Explosion {
-        //println!("{}: explode: {:?}", depth, self);
         match self.a.explode(depth) {
             Explosion::Detonate(a, b) => {
                 self.b.propagate(b, PropagationDir::Left);
@@ -213,17 +194,16 @@ impl SnailFishNumber {
         match self.b.explode(depth) {
             Explosion::Detonate(a, b) => {
                 self.a.propagate(a, PropagationDir::Right);
-                return Explosion::Shockwave(b, PropagationDir::Right);
+                Explosion::Shockwave(b, PropagationDir::Right)
             }
             Explosion::Shockwave(v, PropagationDir::Left) => {
                 self.a.propagate(v, PropagationDir::Right);
-                return Explosion::Blown;
+                Explosion::Blown
             }
             other => other,
         }
     }
     fn split(&mut self) -> Split {
-        //println!("split: {:?}", self);
         match self.a.split() {
             Split::None => self.b.split(),
             s => s,
@@ -321,12 +301,11 @@ mod test {
         .iter()
         .for_each(|(list, expect)| {
             let expect = SnailFishNumber::parse(expect);
-            let result = list.lines().map(SnailFishNumber::parse).reduce(|a, b| {
-                //println!("====> {:?} + {:?}", a, b);
-                a + b
-            });
+            let result = list
+                .lines()
+                .map(SnailFishNumber::parse)
+                .reduce(|a, b| a + b);
             assert_eq!(Some(expect), result);
-            //println!("=====")
         });
     }
 
