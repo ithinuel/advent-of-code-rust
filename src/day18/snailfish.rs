@@ -4,17 +4,17 @@ enum PropagationDir {
     Right,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum Action {
-    /// child just exploded!
-    Exploded(u8, u8),
-    /// Propagating the explosion's shockwave
+#[derive(Debug, PartialEq, Eq)]
+enum Explosion {
+    Detonate(u8, u8),
     Shockwave(u8, PropagationDir),
-    /// shock wave propagation has completed, the whole tree needs to be reduced again
     Blown,
-    /// Pressure's building up
+    None,
+}
+
+#[derive(Debug, PartialEq, Eq)]
+enum Split {
     Split,
-    /// Nothing happened
     None,
 }
 
@@ -32,47 +32,44 @@ impl std::fmt::Debug for SFNElem {
     }
 }
 impl SFNElem {
-    fn reduce(&mut self, depth: usize) -> Action {
+    fn explode(&mut self, depth: usize) -> Explosion {
         match self {
-            &mut SFNElem::Leaf(v) if v > 9 => {
-                //println!("{}:{:?} leaf {} => splitting", depth, self, v);
-                *self = SnailFishNumber::new(v / 2, (v + 1) / 2).into();
-                Action::Split
-            }
-            SFNElem::Leaf(_) => Action::None,
-            // explode even if not fully reduced
+            SFNElem::Leaf(_) => Explosion::None,
             SFNElem::Branch(child) => {
-                //println!("{}:Branch({:?}) reducing child {:?}", depth, child, res);
-                match (&child.a, &child.b) {
-                    (&SFNElem::Leaf(a), &SFNElem::Leaf(b)) if depth >= 4 => {
-                        //println!("{}: exploding ({},{})", depth, a, b);
-                        *self = Self::Leaf(0);
-                        Action::Exploded(a, b)
-                    }
-                    _ => child.reduce_internal(depth + 1),
+                match child.explode(depth + 1) {
+                    Explosion::None => {}
+                    other => return other,
                 }
-            } /*
-              // explode only if inside is already reduced
-              SFNElem::Branch(child) => {
-                  match child.reduce_internal(depth + 1) {
-                      Action::None => {}
-                      other => return other,
-                  }
-
-                  //println!("{}:Branch({:?}) reducing child {:?}", depth, child, res);
-                  match (&child.a, &child.b) {
-                      (&SFNElem::Leaf(a), &SFNElem::Leaf(b)) if depth >= 4 => {
-                          //println!("{}: exploding ({},{})", depth, a, b);
-                          *self = Self::Leaf(0);
-                          Action::Exploded(a, b)
-                      }
-                      _ => Action::None,
-                  }
-              }
-              */
+                //print!("{}: Branch({:?}) => ", depth, child);
+                let r = if depth >= 4 {
+                    match (&child.a, &child.b) {
+                        (&SFNElem::Leaf(a), &SFNElem::Leaf(b)) => {
+                            *self = 0u8.into();
+                            Explosion::Detonate(a, b)
+                        }
+                        _ => unreachable!(),
+                    }
+                } else {
+                    Explosion::None
+                };
+                //println!("{:?}", r);
+                r
+            }
         }
     }
+    fn split(&mut self) -> Split {
+        match self {
+            SFNElem::Branch(child) => child.split(),
+            &mut SFNElem::Leaf(v) if v > 9 => {
+                *self = SnailFishNumber::new(v / 2, (v + 1) / 2).into();
+                Split::Split
+            }
+            _ => Split::None,
+        }
+    }
+
     fn propagate(&mut self, v: u8, direction: PropagationDir) {
+        //println!("propagate {} to the {:?} of {:?}", v, direction, self);
         match self {
             SFNElem::Leaf(value) => *value += v,
             SFNElem::Branch(child) => match direction {
@@ -157,7 +154,7 @@ impl SnailFishNumber {
         v
     }
     fn parse_internal(input: &[u8], depth: usize) -> (Self, usize) {
-        //println!("{}: parsing: {}", depth, String::from_utf8_lossy(input));
+        ////println!("{}: parsing: {}", depth, String::from_utf8_lossy(input));
         assert_eq!(b'[', input[0]);
         let a_start = 1;
         let (a, a_end) = if input[a_start].is_ascii_digit() {
@@ -167,7 +164,7 @@ impl SnailFishNumber {
             let (v, end) = Self::parse_internal(&input[1..], depth + 1);
             (v.into(), a_start + end)
         };
-        //println!("{}: parsed a: {:?}, end at {}", depth, a, a_end);
+        ////println!("{}: parsed a: {:?}, end at {}", depth, a, a_end);
         assert_eq!(b',', input[a_end + 1]);
         let b_start = a_end + 2;
         let (b, b_end) = if input[b_start].is_ascii_digit() {
@@ -177,7 +174,7 @@ impl SnailFishNumber {
             let (v, end) = Self::parse_internal(&input[b_start..], depth + 1);
             (v.into(), b_start + end)
         };
-        //println!("{}: parsed b: {:?}, end at {}", depth, b, b_end);
+        ////println!("{}: parsed b: {:?}, end at {}", depth, b, b_end);
         assert_eq!(b']', input[b_end + 1]);
 
         (Self { a, b }, b_end + 1)
@@ -185,40 +182,51 @@ impl SnailFishNumber {
 
     fn reduce(&mut self) {
         loop {
-            let r = self.reduce_internal(1);
-            println!("{:?}: {:?}", self, r);
-            if r == Action::None {
-                break;
+            match self.explode(1) {
+                Explosion::None => {
+                    if self.split() == Split::None {
+                        break;
+                    }
+                }
+                _other => {
+                    //println!("explosion: {:?} -- {:?}", self, _other),
+                }
             }
+            //println!("=====")
         }
     }
 
-    /// depth starts at 1
-    fn reduce_internal(&mut self, depth: usize) -> Action {
-        let a_action = self.a.reduce(depth);
-        match a_action {
-            Action::Exploded(a, b) => {
+    fn explode(&mut self, depth: usize) -> Explosion {
+        //println!("{}: explode: {:?}", depth, self);
+        match self.a.explode(depth) {
+            Explosion::Detonate(a, b) => {
                 self.b.propagate(b, PropagationDir::Left);
-                return Action::Shockwave(a, PropagationDir::Left);
+                return Explosion::Shockwave(a, PropagationDir::Left);
             }
-            Action::Shockwave(v, PropagationDir::Right) => {
+            Explosion::Shockwave(v, PropagationDir::Right) => {
                 self.b.propagate(v, PropagationDir::Left);
-                return Action::Blown;
+                return Explosion::Blown;
             }
-            Action::None => {}
+            Explosion::None => {}
             other => return other,
         }
-        let b_action = self.b.reduce(depth);
-        match b_action {
-            Action::Exploded(a, b) => {
+        match self.b.explode(depth) {
+            Explosion::Detonate(a, b) => {
                 self.a.propagate(a, PropagationDir::Right);
-                return Action::Shockwave(b, PropagationDir::Right);
+                return Explosion::Shockwave(b, PropagationDir::Right);
             }
-            Action::Shockwave(v, PropagationDir::Left) => {
+            Explosion::Shockwave(v, PropagationDir::Left) => {
                 self.a.propagate(v, PropagationDir::Right);
-                return Action::Blown;
+                return Explosion::Blown;
             }
             other => other,
+        }
+    }
+    fn split(&mut self) -> Split {
+        //println!("split: {:?}", self);
+        match self.a.split() {
+            Split::None => self.b.split(),
+            s => s,
         }
     }
     pub fn magnitude(&self) -> usize {
@@ -270,7 +278,6 @@ mod test {
     }
 
     #[test]
-    //#[ignore]
     fn sum_list() {
         [
             (
@@ -315,11 +322,11 @@ mod test {
         .for_each(|(list, expect)| {
             let expect = SnailFishNumber::parse(expect);
             let result = list.lines().map(SnailFishNumber::parse).reduce(|a, b| {
-                println!("====> {:?} + {:?}", a, b);
+                //println!("====> {:?} + {:?}", a, b);
                 a + b
             });
             assert_eq!(Some(expect), result);
-            println!("=====")
+            //println!("=====")
         });
     }
 
@@ -338,31 +345,5 @@ mod test {
         ]
         .into_iter()
         .for_each(|(input, expect)| assert_eq!(expect, SnailFishNumber::parse(input).magnitude()))
-    }
-
-    #[test]
-    #[ignore]
-    fn blah() {
-        let expect = SnailFishNumber::parse("[[8,[7,7]],[[7,9],[5,0]]]");
-        let test = SnailFishNumber::parse("[[0,[0,[0,[0,0]]]],[7,[[[3,7],[4,3]],[[6,3],[8,8]]]]]");
-        //(10..=30).for_each(|v| {
-        (22..=22).for_each(|v| {
-            let mut dut = test.clone();
-            dut.a
-                .branch_mut()
-                .and_then(|c| c.b.branch_mut())
-                .and_then(|c| c.b.branch_mut())
-                .and_then(|c| c.b.branch_mut())
-                .and_then(|c| c.b.leaf_mut())
-                .map(|val| *val = v);
-
-            print!("{}: {:?}", v, dut);
-            dut.reduce();
-            println!("-> {:?}", dut);
-
-            assert_ne!(Some(&expect), dut.b.branch())
-        });
-
-        panic!("woops");
     }
 }

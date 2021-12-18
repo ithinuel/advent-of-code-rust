@@ -1,6 +1,7 @@
 use aoc_runner_derive::*;
 
 mod snailfish;
+use itertools::Itertools;
 use snailfish::SnailFishNumber;
 
 #[aoc_generator(day18)]
@@ -16,6 +17,16 @@ fn part1(input: &Vec<SnailFishNumber>) -> Option<usize> {
         .reduce(|a, b| a + b)
         .as_ref()
         .map(SnailFishNumber::magnitude)
+}
+
+#[aoc(day18, part2)]
+fn part2(input: &Vec<SnailFishNumber>) -> Option<usize> {
+    input
+        .iter()
+        .cloned()
+        .tuple_combinations()
+        .flat_map(|(a, b)| [(a.clone() + b.clone()).magnitude(), (b + a).magnitude()].into_iter())
+        .max()
 }
 
 #[cfg(test)]
@@ -48,7 +59,6 @@ mod test {
     }
 
     #[test]
-    #[ignore]
     fn part1() {
         assert_eq!(Some(4140), super::part1(&super::gen(EXAMPLE)));
     }
