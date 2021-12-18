@@ -9,14 +9,10 @@ enum Explosion {
     Detonate(u8, u8),
     Shockwave(u8, PropagationDir),
     Blown,
-    None,
 }
 
 #[derive(Debug, PartialEq, Eq)]
-enum Split {
-    Split,
-    None,
-}
+struct Split;
 
 #[derive(PartialEq, Eq, Clone)]
 pub enum SFNElem {
@@ -32,33 +28,30 @@ impl std::fmt::Debug for SFNElem {
     }
 }
 impl SFNElem {
-    fn explode(&mut self, depth: usize) -> Explosion {
+    fn explode(&mut self, depth: usize) -> Option<Explosion> {
         match self {
-            SFNElem::Leaf(_) => Explosion::None,
-            SFNElem::Branch(child) => {
-                match child.explode(depth + 1) {
-                    Explosion::None => {}
-                    other => return other,
-                }
-                match (&child.a, &child.b) {
+            SFNElem::Leaf(_) => None,
+            SFNElem::Branch(child) => match child.explode(depth + 1) {
+                None => match (&child.a, &child.b) {
                     (&SFNElem::Leaf(a), &SFNElem::Leaf(b)) if depth >= 4 => {
                         *self = 0u8.into();
-                        Explosion::Detonate(a, b)
+                        Some(Explosion::Detonate(a, b))
                     }
                     (_, _) if depth >= 4 => unreachable!(),
-                    _ => Explosion::None,
-                }
-            }
+                    _ => None,
+                },
+                other => other,
+            },
         }
     }
-    fn split(&mut self) -> Split {
+    fn split(&mut self) -> Option<Split> {
         match self {
             SFNElem::Branch(child) => child.split(),
             &mut SFNElem::Leaf(v) if v > 9 => {
                 *self = SnailFishNumber::new(v / 2, (v + 1) / 2).into();
-                Split::Split
+                Some(Split)
             }
-            _ => Split::None,
+            _ => None,
         }
     }
 
@@ -172,40 +165,43 @@ impl SnailFishNumber {
 
     fn reduce(&mut self) {
         loop {
-            if self.explode(1) == Explosion::None && self.split() == Split::None {
+            if self.explode(1).is_none() && self.split().is_none() {
                 break;
             }
         }
     }
 
-    fn explode(&mut self, depth: usize) -> Explosion {
-        match self.a.explode(depth) {
-            Explosion::Detonate(a, b) => {
-                self.b.propagate(b, PropagationDir::Left);
-                return Explosion::Shockwave(a, PropagationDir::Left);
-            }
-            Explosion::Shockwave(v, PropagationDir::Right) => {
-                self.b.propagate(v, PropagationDir::Left);
-                return Explosion::Blown;
-            }
-            Explosion::None => {}
-            other => return other,
-        }
-        match self.b.explode(depth) {
-            Explosion::Detonate(a, b) => {
-                self.a.propagate(a, PropagationDir::Right);
-                Explosion::Shockwave(b, PropagationDir::Right)
-            }
-            Explosion::Shockwave(v, PropagationDir::Left) => {
-                self.a.propagate(v, PropagationDir::Right);
-                Explosion::Blown
-            }
-            other => other,
-        }
+    fn explode(&mut self, depth: usize) -> Option<Explosion> {
+        self.a
+            .explode(depth)
+            .map(|res| match res {
+                Explosion::Detonate(a, b) => {
+                    self.b.propagate(b, PropagationDir::Left);
+                    Explosion::Shockwave(a, PropagationDir::Left)
+                }
+                Explosion::Shockwave(v, PropagationDir::Right) => {
+                    self.b.propagate(v, PropagationDir::Left);
+                    Explosion::Blown
+                }
+                other => other,
+            })
+            .or_else(|| {
+                self.b.explode(depth).map(|res| match res {
+                    Explosion::Detonate(a, b) => {
+                        self.a.propagate(a, PropagationDir::Right);
+                        Explosion::Shockwave(b, PropagationDir::Right)
+                    }
+                    Explosion::Shockwave(v, PropagationDir::Left) => {
+                        self.a.propagate(v, PropagationDir::Right);
+                        Explosion::Blown
+                    }
+                    other => other,
+                })
+            })
     }
-    fn split(&mut self) -> Split {
+    fn split(&mut self) -> Option<Split> {
         match self.a.split() {
-            Split::None => self.b.split(),
+            None => self.b.split(),
             s => s,
         }
     }
