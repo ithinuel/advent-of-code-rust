@@ -136,31 +136,30 @@ impl SnailFishNumber {
     pub fn parse(input: &str) -> Self {
         let bytes = input.as_bytes();
         let (v, len) = Self::parse_internal(bytes, 0);
-        assert_eq!(bytes.len(), len + 1);
+        assert!(len.is_empty(), "Invalid format");
         v
     }
-    fn parse_internal(input: &[u8], depth: usize) -> (Self, usize) {
-        assert_eq!(b'[', input[0]);
-        let a_start = 1;
-        let (a, a_end) = if input[a_start].is_ascii_digit() {
-            let v = input[a_start] - b'0';
-            (v.into(), a_start)
-        } else {
-            let (v, end) = Self::parse_internal(&input[1..], depth + 1);
-            (v.into(), a_start + end)
-        };
-        assert_eq!(b',', input[a_end + 1]);
-        let b_start = a_end + 2;
-        let (b, b_end) = if input[b_start].is_ascii_digit() {
-            let v = input[b_start] - b'0';
-            (v.into(), b_start)
-        } else {
-            let (v, end) = Self::parse_internal(&input[b_start..], depth + 1);
-            (v.into(), b_start + end)
-        };
-        assert_eq!(b']', input[b_end + 1]);
+    fn parse_internal(input: &[u8], depth: usize) -> (Self, &[u8]) {
+        macro_rules! parse_sfnelem {
+            ($tag:expr, $input:expr) => {{
+                match $input {
+                    [$tag, b, rest @ ..] if b.is_ascii_digit() => ((b - b'0').into(), rest),
+                    [$tag, rest @ ..] => {
+                        let (v, rest) = Self::parse_internal(rest, depth + 1);
+                        (v.into(), rest)
+                    }
+                    _ => unreachable!("Invalid format"),
+                }
+            }};
+        }
 
-        (Self { a, b }, b_end + 1)
+        let (a, input) = parse_sfnelem!(b'[', input);
+        let (b, input) = parse_sfnelem!(b',', input);
+        let rest = match input {
+            [b']', rest @ ..] => rest,
+            _ => unreachable!("Invalid format"),
+        };
+        (Self { a, b }, rest)
     }
 
     fn reduce(&mut self) {
@@ -320,5 +319,26 @@ mod test {
         ]
         .into_iter()
         .for_each(|(input, expect)| assert_eq!(expect, SnailFishNumber::parse(input).magnitude()))
+    }
+
+    #[test]
+    #[should_panic = "Invalid format"]
+    fn bad_input_missing_first() {
+        SnailFishNumber::parse("[,3]");
+    }
+    #[test]
+    #[should_panic = "Invalid format"]
+    fn bad_input_missing_last() {
+        SnailFishNumber::parse("[3,]");
+    }
+    #[test]
+    #[should_panic = "Invalid format"]
+    fn bad_input_missing_open_bracket() {
+        SnailFishNumber::parse("[3,4]]");
+    }
+    #[test]
+    #[should_panic = "Invalid format"]
+    fn bad_input_missing_close_bracket() {
+        SnailFishNumber::parse("[[4,3,2]");
     }
 }
