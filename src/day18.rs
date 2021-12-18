@@ -10,7 +10,7 @@ fn gen(input: &str) -> Vec<SnailFishNumber> {
 }
 
 #[aoc(day18, part1)]
-fn part1(input: &Vec<SnailFishNumber>) -> Option<usize> {
+fn part1(input: &[SnailFishNumber]) -> Option<usize> {
     input
         .iter()
         .cloned()
@@ -20,7 +20,7 @@ fn part1(input: &Vec<SnailFishNumber>) -> Option<usize> {
 }
 
 #[aoc(day18, part2)]
-fn part2(input: &Vec<SnailFishNumber>) -> Option<usize> {
+fn part2(input: &[SnailFishNumber]) -> Option<usize> {
     input
         .iter()
         .cloned()
