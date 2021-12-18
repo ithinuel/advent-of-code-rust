@@ -111,8 +111,8 @@ fn part2(target: &Input) -> usize {
         .collect();
 
     possible_dx
-        .into_iter()
-        .cartesian_product(possible_dy.into_iter())
+        .iter()
+        .cartesian_product(possible_dy.iter())
         .filter(|((_, step_x, _, _), (_, step_y, _, _))| step_x == step_y)
         .map(|(x, y)| (x.0, y.0))
         .unique()
@@ -139,10 +139,9 @@ fn part2_faster(target: &Input) -> usize {
                 .contains(&distance)
                 .then(|| (dx, step, end_speed, distance))
         })
-        .unique()
-        .sorted()
         .collect();
 
+    // no point in looking up for dy steps that will never be matched by dx_steps.
     let max_step = possible_dx.iter().max_by_key(|v| v.1).unwrap().1;
     let possible_dy: BTreeSet<_> = (*target.1.start()..1000)
         .cartesian_product(1..=max_step)
