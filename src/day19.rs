@@ -5,6 +5,8 @@ use itertools::Itertools;
 
 use crate::day19::matrices::rotations;
 
+use self::matrices::Coord;
+
 mod matrices;
 type Report = Vec<(i32, i32, i32)>;
 
@@ -40,8 +42,7 @@ impl Object {
     }
 }
 
-#[aoc(day19, part1)]
-fn part1(input: &[Report]) -> usize {
+fn rebuild_map(input: &[Report]) -> BTreeMap<Coord, Object> {
     let mut unmapped_reports: BTreeSet<_> = (1..input.len()).collect();
     let mut map: BTreeMap<matrices::Coord, Object> = input[0]
         .iter()
@@ -144,13 +145,26 @@ fn part1(input: &[Report]) -> usize {
             break;
         }
     }
+    map
+}
 
-    println!(
-        "map: {:?}",
-        map.iter().filter(|(_, obj)| obj.is_scanner()).collect_vec()
-    );
-
+#[aoc(day19, part1)]
+fn part1(input: &[Report]) -> usize {
+    let map = rebuild_map(input);
     map.into_iter().filter(|(_, obj)| obj.is_beacon()).count()
+}
+
+#[aoc(day19, part2)]
+fn part2(input: &[Report]) -> Option<i32> {
+    let scanners: BTreeMap<_, _> = rebuild_map(input)
+        .into_iter()
+        .filter(|(_, obj)| obj.is_scanner())
+        .collect();
+    scanners
+        .keys()
+        .tuple_combinations()
+        .map(|(a, b)| (a.0 - b.0).abs() + (a.1 - b.1).abs() + (a.2 - b.2).abs())
+        .max()
 }
 
 #[cfg(test)]
@@ -191,5 +205,9 @@ mod test {
     #[test]
     fn part1() {
         assert_eq!(79, super::part1(&super::gen(EXAMPLE)));
+    }
+    #[test]
+    fn part2() {
+        assert_eq!(Some(3621), super::part2(&super::gen(EXAMPLE)));
     }
 }
