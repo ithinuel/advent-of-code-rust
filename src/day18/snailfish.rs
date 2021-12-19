@@ -135,17 +135,17 @@ impl SnailFishNumber {
 
     pub fn parse(input: &str) -> Self {
         let bytes = input.as_bytes();
-        let (v, len) = Self::parse_internal(bytes, 0);
-        assert!(len.is_empty(), "Invalid format");
+        let (v, rest) = Self::parse_internal(bytes);
+        assert!(rest.is_empty(), "Invalid format");
         v
     }
-    fn parse_internal(input: &[u8], depth: usize) -> (Self, &[u8]) {
+    fn parse_internal(input: &[u8]) -> (Self, &[u8]) {
         macro_rules! parse_sfnelem {
             ($tag:expr, $input:expr) => {{
                 match $input {
                     [$tag, b, rest @ ..] if b.is_ascii_digit() => ((b - b'0').into(), rest),
                     [$tag, rest @ ..] => {
-                        let (v, rest) = Self::parse_internal(rest, depth + 1);
+                        let (v, rest) = Self::parse_internal(rest);
                         (v.into(), rest)
                     }
                     _ => unreachable!("Invalid format"),
