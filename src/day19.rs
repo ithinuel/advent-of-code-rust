@@ -42,12 +42,12 @@ impl Object {
     }
 }
 
-fn transform_images_relative_to(
+fn transform_images_relative_to<'a>(
     reference_beacon: Coord,
-    keys: impl Iterator<Item = usize>,
-    rotated: &BTreeMap<usize, Vec<Vec<Coord>>>,
-) -> BTreeMap<(usize, Coord, usize, usize), (Coord, Vec<Coord>)> {
-    keys.flat_map(|scan_id| {
+    keys: impl Iterator<Item = usize> + 'a,
+    rotated: &'a BTreeMap<usize, Vec<Vec<Coord>>>,
+) -> impl Iterator<Item = ((usize, Coord, usize, usize), (Coord, Vec<Coord>))> + 'a {
+    keys.flat_map(move |scan_id| {
         (0..24).flat_map(move |rot_id| {
             rotated[&scan_id][rot_id].iter().enumerate().map(
                 move |(target_beacon_id, relative_target_beacon)| {
@@ -81,7 +81,6 @@ fn transform_images_relative_to(
             )
         })
     })
-    .collect()
 }
 
 fn rebuild_map(input: &[Report]) -> BTreeMap<Coord, Object> {
@@ -115,7 +114,6 @@ fn rebuild_map(input: &[Report]) -> BTreeMap<Coord, Object> {
                 unmapped_reports.iter().cloned(),
                 &rotated,
             )
-            .into_iter()
         })
         .collect();
 
@@ -126,7 +124,7 @@ fn rebuild_map(input: &[Report]) -> BTreeMap<Coord, Object> {
             (scanner_coord, matched_image),
         )) = relative
             .iter()
-            .find(|(_, (_, report))| report.iter().filter(|a| map.keys().contains(a)).count() >= 12)
+            .find(|(_, (_, report))| report.iter().filter(|a| map.contains_key(a)).count() >= 12)
         {
             let scanner_coord = *scanner_coord;
             println!(
@@ -157,7 +155,6 @@ fn rebuild_map(input: &[Report]) -> BTreeMap<Coord, Object> {
             });
             relative.extend(matched_image.into_iter().flat_map(|coord| {
                 transform_images_relative_to(coord, unmapped_reports.iter().cloned(), &rotated)
-                    .into_iter()
             }));
         } else {
             println!("We couldn't find a match for the remaining reports:");
@@ -166,7 +163,7 @@ fn rebuild_map(input: &[Report]) -> BTreeMap<Coord, Object> {
             println!("The current maps is: {:?}", map);
             // So weird... using panic instead of break doubles the execution time even if this
             // path's never taken Oo
-            //panic!("Something went teribly wrong");
+            //unreachable!("Something went teribly wrong");
             break;
         }
     }
