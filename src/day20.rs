@@ -74,7 +74,11 @@ fn part2((table, image): &(Vec<bool>, HashSet<(isize, isize)>)) -> usize {
     let mut outside_is_lit = false;
     for _ in 0..50 {
         image = enhance(table, image, outside_is_lit);
-        outside_is_lit ^= table[0];
+        if outside_is_lit {
+            outside_is_lit &= table[511];
+        } else {
+            outside_is_lit |= table[0];
+        }
     }
     image.len()
 }
