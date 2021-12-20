@@ -42,6 +42,48 @@ impl Object {
     }
 }
 
+fn transform_images_relative_to(
+    reference_beacon: Coord,
+    keys: impl Iterator<Item = usize>,
+    rotated: &BTreeMap<usize, Vec<Vec<Coord>>>,
+) -> BTreeMap<(usize, Coord, usize, usize), (Coord, Vec<Coord>)> {
+    keys.flat_map(|scan_id| {
+        (0..24).flat_map(move |rot_id| {
+            rotated[&scan_id][rot_id].iter().enumerate().map(
+                move |(target_beacon_id, relative_target_beacon)| {
+                    // if target_beacon_id in scand_id's report match the reference_beacon
+                    // coordinates, then scan_id's loc is:
+                    let scanner_absolute = (
+                        reference_beacon.0 - relative_target_beacon.0,
+                        reference_beacon.1 - relative_target_beacon.1,
+                        reference_beacon.2 - relative_target_beacon.2,
+                    );
+
+                    // compute where would scand_id's
+                    (
+                        (scan_id, reference_beacon, target_beacon_id, rot_id),
+                        (
+                            scanner_absolute,
+                            rotated[&scan_id][rot_id]
+                                .iter()
+                                .cloned()
+                                .map(move |(x, y, z)| {
+                                    (
+                                        scanner_absolute.0 + x,
+                                        scanner_absolute.1 + y,
+                                        scanner_absolute.2 + z,
+                                    )
+                                })
+                                .collect_vec(),
+                        ),
+                    )
+                },
+            )
+        })
+    })
+    .collect()
+}
+
 fn rebuild_map(input: &[Report]) -> BTreeMap<Coord, Object> {
     let mut unmapped_reports: BTreeSet<_> = (1..input.len()).collect();
     let mut map: BTreeMap<matrices::Coord, Object> = input[0]
@@ -52,7 +94,7 @@ fn rebuild_map(input: &[Report]) -> BTreeMap<Coord, Object> {
         .collect();
     map.insert((0, 0, 0), Object::Scanner(0));
 
-    let mut rotated: BTreeMap<_, _> = unmapped_reports
+    let rotated: BTreeMap<_, _> = unmapped_reports
         .iter()
         .map(|&scan_id| {
             (
@@ -64,69 +106,37 @@ fn rebuild_map(input: &[Report]) -> BTreeMap<Coord, Object> {
         })
         .collect();
 
+    let mut relative: BTreeMap<_, _> = map
+        .iter()
+        .filter_map(|(&coord, &obj)| obj.is_beacon().then(|| coord))
+        .flat_map(|reference_beacon| {
+            transform_images_relative_to(
+                reference_beacon,
+                unmapped_reports.iter().cloned(),
+                &rotated,
+            )
+            .into_iter()
+        })
+        .collect();
+
     while !unmapped_reports.is_empty() {
         // find a report with a rotation that matches at least 12 points in the current map.
         if let Some((
-            reference,
-            scanner_id,
-            scanner_coord,
-            target_beacon_id,
-            rotation_id,
-            matched_image,
-        )) = unmapped_reports
+            &(scanner_id, reference, target_beacon, rotation_id),
+            (scanner_coord, matched_image),
+        )) = relative
             .iter()
-            .cloned()
-            .cartesian_product(0..24)
-            .cartesian_product(
-                map.iter()
-                    .filter_map(|(&coord, &obj)| obj.is_beacon().then(|| coord)),
-            )
-            .flat_map(|((scan_id, rot_id), reference_beacon)| {
-                let rotated = &rotated;
-                rotated[&scan_id][rot_id].iter().enumerate().map(
-                    move |(target_beacon_id, relative_target_beacon)| {
-                        // if target_beacon_id in scand_id's report match the reference_beacon
-                        // coordinates, then scan_id's loc is:
-                        let scanner_absolute = (
-                            reference_beacon.0 - relative_target_beacon.0,
-                            reference_beacon.1 - relative_target_beacon.1,
-                            reference_beacon.2 - relative_target_beacon.2,
-                        );
-
-                        // compute where would scand_id's
-                        (
-                            reference_beacon,
-                            scan_id,
-                            scanner_absolute,
-                            target_beacon_id,
-                            rot_id,
-                            rotated[&scan_id][rot_id]
-                                .iter()
-                                .cloned()
-                                .map(move |(x, y, z)| {
-                                    (
-                                        scanner_absolute.0 + x,
-                                        scanner_absolute.1 + y,
-                                        scanner_absolute.2 + z,
-                                    )
-                                }),
-                        )
-                    },
-                )
-            })
-            // those things could probably be cached
-            .find(|(_, _, _, _, _, report)| {
-                report.clone().filter(|a| map.keys().contains(a)).count() >= 12
-            })
+            .find(|(_, (_, report))| report.iter().filter(|a| map.keys().contains(a)).count() >= 12)
         {
-            // expand map with newly matched beacons & scanner
+            let scanner_coord = *scanner_coord;
             println!(
-                "we found one: {} using {} on {:?} with rotation {}",
-                scanner_id, target_beacon_id, reference, rotation_id
+                "we found: {} to be from {:?} using {:?} on beacon {}:{} and rotation {}",
+                scanner_id, scanner_coord, reference, scanner_id, target_beacon, rotation_id
             );
             map.extend(
                 matched_image
-                    .into_iter()
+                    .iter()
+                    .cloned()
                     .enumerate()
                     .map(|(idx, coord)| (coord, Object::Beacon(scanner_id, idx)))
                     .chain(std::iter::once((
@@ -135,14 +145,27 @@ fn rebuild_map(input: &[Report]) -> BTreeMap<Coord, Object> {
                     ))),
             );
             unmapped_reports.remove(&scanner_id);
-            rotated.remove(&scanner_id);
+
+            let matched_image: Vec<Coord> = matched_image.clone();
+            let to_remove = relative
+                .keys()
+                .cloned()
+                .filter(|&(id, _, _, _)| id == scanner_id)
+                .collect_vec();
+            to_remove.into_iter().for_each(|key| {
+                relative.remove(&key);
+            });
+            relative.extend(matched_image.into_iter().flat_map(|coord| {
+                transform_images_relative_to(coord, unmapped_reports.iter().cloned(), &rotated)
+                    .into_iter()
+            }));
         } else {
             println!("We couldn't find a match for the remaining reports:");
             println!("{:?}", unmapped_reports);
             println!();
             println!("The current maps is: {:?}", map);
-            //panic!("Something went teribly wrong");
-            break;
+            panic!("Something went teribly wrong");
+            //break;
         }
     }
     map
@@ -150,18 +173,20 @@ fn rebuild_map(input: &[Report]) -> BTreeMap<Coord, Object> {
 
 #[aoc(day19, part1)]
 fn part1(input: &[Report]) -> usize {
-    let map = rebuild_map(input);
-    map.into_iter().filter(|(_, obj)| obj.is_beacon()).count()
+    rebuild_map(input)
+        .into_iter()
+        .filter(|(_, obj)| obj.is_beacon())
+        .count()
 }
 
 #[aoc(day19, part2)]
 fn part2(input: &[Report]) -> Option<i32> {
-    let scanners: BTreeMap<_, _> = rebuild_map(input)
+    let scanners = rebuild_map(input)
         .into_iter()
-        .filter(|(_, obj)| obj.is_scanner())
-        .collect();
+        .filter_map(|(key, obj)| obj.is_scanner().then(|| key))
+        .collect_vec();
     scanners
-        .keys()
+        .into_iter()
         .tuple_combinations()
         .map(|(a, b)| (a.0 - b.0).abs() + (a.1 - b.1).abs() + (a.2 - b.2).abs())
         .max()
