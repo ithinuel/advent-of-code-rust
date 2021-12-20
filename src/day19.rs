@@ -164,8 +164,10 @@ fn rebuild_map(input: &[Report]) -> BTreeMap<Coord, Object> {
             println!("{:?}", unmapped_reports);
             println!();
             println!("The current maps is: {:?}", map);
-            panic!("Something went teribly wrong");
-            //break;
+            // So weird... using panic instead of break doubles the execution time even if this
+            // path's never taken Oo
+            //panic!("Something went teribly wrong");
+            break;
         }
     }
     map
