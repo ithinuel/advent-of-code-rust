@@ -35,7 +35,7 @@ fn gen(input: &str) -> (Vec<bool>, HashSet<(isize, isize)>) {
 }
 
 fn enhance(
-    table: &Vec<bool>,
+    table: &[bool],
     image: HashSet<(isize, isize)>,
     is_outside_lit: bool,
 ) -> HashSet<(isize, isize)> {
@@ -74,7 +74,7 @@ fn part2((table, image): &(Vec<bool>, HashSet<(isize, isize)>)) -> usize {
     let mut outside_is_lit = false;
     for _ in 0..50 {
         image = enhance(table, image, outside_is_lit);
-        outside_is_lit = outside_is_lit ^ table[0];
+        outside_is_lit ^= table[0];
     }
     image.len()
 }

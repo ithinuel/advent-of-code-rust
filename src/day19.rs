@@ -30,9 +30,29 @@ fn part1(input: &[Report]) -> usize {
         .count()
 }
 
+#[aoc(day19, part1, faster)]
+fn part1_faster(input: &[Report]) -> usize {
+    rebuild_map_faster(input)
+        .into_iter()
+        .filter(|(_, obj)| obj.is_beacon())
+        .count()
+}
+
 #[aoc(day19, part2)]
 fn part2(input: &[Report]) -> Option<i32> {
     let scanners = rebuild_map(input)
+        .into_iter()
+        .filter_map(|(key, obj)| obj.is_scanner().then(|| key))
+        .collect_vec();
+    scanners
+        .into_iter()
+        .tuple_combinations()
+        .map(|(a, b)| (a.0 - b.0).abs() + (a.1 - b.1).abs() + (a.2 - b.2).abs())
+        .max()
+}
+#[aoc(day19, part2, faster)]
+fn part2_faster(input: &[Report]) -> Option<i32> {
+    let scanners = rebuild_map_faster(input)
         .into_iter()
         .filter_map(|(key, obj)| obj.is_scanner().then(|| key))
         .collect_vec();
@@ -66,7 +86,16 @@ mod test {
         assert_eq!(79, super::part1(&super::gen(EXAMPLE)));
     }
     #[test]
+    fn part1_faster() {
+        assert_eq!(79, super::part1_faster(&super::gen(EXAMPLE)));
+    }
+
+    #[test]
     fn part2() {
         assert_eq!(Some(3621), super::part2(&super::gen(EXAMPLE)));
+    }
+    #[test]
+    fn part2_faster() {
+        assert_eq!(Some(3621), super::part2_faster(&super::gen(EXAMPLE)));
     }
 }

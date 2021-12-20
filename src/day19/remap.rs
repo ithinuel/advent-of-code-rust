@@ -1,4 +1,7 @@
 use itertools::Itertools;
+use rayon::iter::IntoParallelIterator;
+use rayon::iter::IntoParallelRefIterator;
+use rayon::iter::ParallelIterator;
 use std::collections::{HashMap, HashSet};
 
 pub type Coord = (i32, i32, i32);
@@ -43,12 +46,12 @@ fn rotations() -> impl Iterator<Item = fn(Coord) -> Coord> {
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum Object {
-    Beacon(usize, usize),
+    Beacon,
     Scanner(usize),
 }
 impl Object {
     pub fn is_beacon(&self) -> bool {
-        matches!(self, Object::Beacon(_, _))
+        matches!(self, Object::Beacon)
     }
     pub fn is_scanner(&self) -> bool {
         matches!(self, Object::Scanner(_))
@@ -102,8 +105,7 @@ pub fn rebuild_map(input: &[Report]) -> HashMap<Coord, Object> {
     let mut map: HashMap<Coord, Object> = input[0]
         .iter()
         .cloned()
-        .enumerate()
-        .map(|(idx, coord)| (coord, Object::Beacon(0, idx)))
+        .map(|coord| (coord, Object::Beacon))
         .collect();
     map.insert((0, 0, 0), Object::Scanner(0));
 
@@ -134,23 +136,21 @@ pub fn rebuild_map(input: &[Report]) -> HashMap<Coord, Object> {
     while !unmapped_reports.is_empty() {
         // find a report with a rotation that matches at least 12 points in the current map.
         if let Some((
-            &(scanner_id, reference, target_beacon, rotation_id),
+            &(scanner_id, _reference, _target_beacon, _rotation_id),
             (scanner_coord, matched_image),
-        )) = relative
-            .iter()
-            .find(|(_, (_, report))| report.iter().filter(|a| map.contains_key(a)).count() >= 12)
-        {
+        )) = relative.par_iter().find_any(|(_, (_, report))| {
+            report.iter().filter(|a| map.contains_key(a)).count() >= 12
+        }) {
             let scanner_coord = *scanner_coord;
-            println!(
-                "we found: {} to be from {:?} using {:?} on beacon {}:{} and rotation {}",
-                scanner_id, scanner_coord, reference, scanner_id, target_beacon, rotation_id
-            );
+            //println!(
+            //    "we found: {} to be from {:?} using {:?} on beacon {}:{} and rotation {}",
+            //    scanner_id, scanner_coord, _reference, scanner_id, _target_beacon, _rotation_id
+            //);
             map.extend(
                 matched_image
                     .iter()
                     .cloned()
-                    .enumerate()
-                    .map(|(idx, coord)| (coord, Object::Beacon(scanner_id, idx)))
+                    .map(|coord| (coord, Object::Beacon))
                     .chain(std::iter::once((
                         scanner_coord,
                         Object::Scanner(scanner_id),
@@ -184,8 +184,83 @@ pub fn rebuild_map(input: &[Report]) -> HashMap<Coord, Object> {
     map
 }
 
+fn find_candidate<'a>(
+    map: &HashMap<Coord, Object>,
+    unmapped_reports: &'a HashSet<usize>,
+    rotated: &'a [Vec<Vec<Coord>>],
+) -> Option<(Coord, usize, usize)> {
+    // count how many times a coord is hit by scanner location resolution
+    unmapped_reports
+        .par_iter()
+        .cloned()
+        .flat_map(move |scan_id| (0..24).into_par_iter().map(move |rot_id| (scan_id, rot_id)))
+        .filter_map(move |(scan_id, rot_id)| {
+            let mut freq = HashMap::new();
+
+            rotated[scan_id][rot_id]
+                .iter()
+                .cartesian_product(
+                    map.iter()
+                        .filter_map(|(&coord, obj)| obj.is_beacon().then(|| coord)),
+                )
+                .for_each(|(beacon_rel_coord, reference_beacon)| {
+                    let scanner_absolute = (
+                        reference_beacon.0 - beacon_rel_coord.0,
+                        reference_beacon.1 - beacon_rel_coord.1,
+                        reference_beacon.2 - beacon_rel_coord.2,
+                    );
+                    *freq.entry(scanner_absolute).or_insert(0) += 1;
+                });
+
+            freq.into_iter()
+                .max_by_key(|&(_, score)| score)
+                .map(move |(coord, score)| (coord, scan_id, rot_id, score))
+        })
+        .find_any(|&(_, _, _, score)| score >= 12)
+        .map(|(coord, scan_id, rot_id, _)| (coord, scan_id, rot_id))
+}
+pub fn rebuild_map_faster(input: &[Report]) -> HashMap<Coord, Object> {
+    let mut unmapped_reports: HashSet<_> = (1..input.len()).collect();
+    let mut map: HashMap<Coord, Object> = input[0]
+        .iter()
+        .cloned()
+        .map(|coord| (coord, Object::Beacon))
+        .collect();
+    map.insert((0, 0, 0), Object::Scanner(0));
+
+    let rotated: Vec<_> = (0..input.len())
+        .map(|scan_id| {
+            rotations()
+                .map(|r| input[scan_id].iter().cloned().map(r).collect_vec())
+                .collect_vec()
+        })
+        .collect();
+
+    while !unmapped_reports.is_empty() {
+        if let Some((coord, scan_id, rot_id)) = find_candidate(&map, &unmapped_reports, &rotated) {
+            //println!(
+            //    "we found: {} to be at {:?} using rotation {}",
+            //    scan_id, coord, rot_id
+            //);
+            map.extend(
+                rotated[scan_id][rot_id]
+                    .iter()
+                    .cloned()
+                    .map(move |(x, y, z)| (coord.0 + x, coord.1 + y, coord.2 + z))
+                    .map(|coord| (coord, Object::Beacon))
+                    .chain(std::iter::once((coord, Object::Scanner(scan_id)))),
+            );
+            unmapped_reports.remove(&scan_id);
+        } else {
+            unreachable!("Something went teribly wrong");
+        }
+    }
+    map
+}
+
 #[cfg(test)]
 mod test {
+    const EXAMPLE: &str = include_str!("example.txt");
     const ROTATION_EXAMPLE: &str = include_str!("rotation_example.txt");
 
     #[test]
@@ -202,5 +277,19 @@ mod test {
             .iter()
             .enumerate()
             .for_each(|(idx, v)| assert!(res.contains(v), "Missing {} from results: {:?}", idx, v));
+    }
+
+    #[test]
+    fn rebuild_faster() {
+        let input = super::super::gen(EXAMPLE);
+        let expect = super::rebuild_map(&input);
+        let result = super::rebuild_map_faster(&input);
+
+        expect
+            .iter()
+            .for_each(|(k, v)| assert_eq!(Some(v), result.get(k)));
+        result
+            .iter()
+            .for_each(|(k, v)| assert_eq!(Some(v), expect.get(k)));
     }
 }
