@@ -60,40 +60,41 @@ fn transform_images_relative_to<'a>(
     keys: impl Iterator<Item = usize> + 'a,
     rotated: &'a HashMap<usize, Vec<Vec<Coord>>>,
 ) -> impl Iterator<Item = ((usize, Coord, usize, usize), (Coord, Vec<Coord>))> + 'a {
-    keys.flat_map(move |scan_id| {
-        (0..24).flat_map(move |rot_id| {
-            rotated[&scan_id][rot_id].iter().enumerate().map(
-                move |(target_beacon_id, relative_target_beacon)| {
-                    // if target_beacon_id in scand_id's report match the reference_beacon
-                    // coordinates, then scan_id's loc is:
-                    let scanner_absolute = (
-                        reference_beacon.0 - relative_target_beacon.0,
-                        reference_beacon.1 - relative_target_beacon.1,
-                        reference_beacon.2 - relative_target_beacon.2,
-                    );
+    keys.cartesian_product(0..24)
+        .flat_map(move |(scan_id, rot_id)| {
+            rotated[&scan_id][rot_id]
+                .iter()
+                .enumerate()
+                .map(move |(beacon_id, beacon_coord)| (scan_id, rot_id, beacon_id, beacon_coord))
+        })
+        .map(move |(scan_id, rot_id, beacon_rel_id, beacon_rel_coord)| {
+            // if beacon_rel_id in scan_id's report match the reference_beacon
+            // coordinates, then scan_id's location is:
+            let scanner_absolute = (
+                reference_beacon.0 - beacon_rel_coord.0,
+                reference_beacon.1 - beacon_rel_coord.1,
+                reference_beacon.2 - beacon_rel_coord.2,
+            );
 
-                    // compute where would scand_id's
-                    (
-                        (scan_id, reference_beacon, target_beacon_id, rot_id),
-                        (
-                            scanner_absolute,
-                            rotated[&scan_id][rot_id]
-                                .iter()
-                                .cloned()
-                                .map(move |(x, y, z)| {
-                                    (
-                                        scanner_absolute.0 + x,
-                                        scanner_absolute.1 + y,
-                                        scanner_absolute.2 + z,
-                                    )
-                                })
-                                .collect_vec(),
-                        ),
-                    )
-                },
+            // what would the report look like in absolute coord space
+            (
+                (scan_id, reference_beacon, beacon_rel_id, rot_id),
+                (
+                    scanner_absolute,
+                    rotated[&scan_id][rot_id]
+                        .iter()
+                        .cloned()
+                        .map(move |(x, y, z)| {
+                            (
+                                scanner_absolute.0 + x,
+                                scanner_absolute.1 + y,
+                                scanner_absolute.2 + z,
+                            )
+                        })
+                        .collect_vec(),
+                ),
             )
         })
-    })
 }
 
 pub fn rebuild_map(input: &[Report]) -> HashMap<Coord, Object> {
