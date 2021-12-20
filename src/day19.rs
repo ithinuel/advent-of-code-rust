@@ -1,4 +1,4 @@
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::{HashMap, HashSet};
 
 use aoc_runner_derive::*;
 use itertools::Itertools;
@@ -45,7 +45,7 @@ impl Object {
 fn transform_images_relative_to<'a>(
     reference_beacon: Coord,
     keys: impl Iterator<Item = usize> + 'a,
-    rotated: &'a BTreeMap<usize, Vec<Vec<Coord>>>,
+    rotated: &'a HashMap<usize, Vec<Vec<Coord>>>,
 ) -> impl Iterator<Item = ((usize, Coord, usize, usize), (Coord, Vec<Coord>))> + 'a {
     keys.flat_map(move |scan_id| {
         (0..24).flat_map(move |rot_id| {
@@ -83,9 +83,9 @@ fn transform_images_relative_to<'a>(
     })
 }
 
-fn rebuild_map(input: &[Report]) -> BTreeMap<Coord, Object> {
-    let mut unmapped_reports: BTreeSet<_> = (1..input.len()).collect();
-    let mut map: BTreeMap<matrices::Coord, Object> = input[0]
+fn rebuild_map(input: &[Report]) -> HashMap<Coord, Object> {
+    let mut unmapped_reports: HashSet<_> = (1..input.len()).collect();
+    let mut map: HashMap<matrices::Coord, Object> = input[0]
         .iter()
         .cloned()
         .enumerate()
@@ -93,7 +93,7 @@ fn rebuild_map(input: &[Report]) -> BTreeMap<Coord, Object> {
         .collect();
     map.insert((0, 0, 0), Object::Scanner(0));
 
-    let rotated: BTreeMap<_, _> = unmapped_reports
+    let rotated: HashMap<_, _> = unmapped_reports
         .iter()
         .map(|&scan_id| {
             (
@@ -105,7 +105,7 @@ fn rebuild_map(input: &[Report]) -> BTreeMap<Coord, Object> {
         })
         .collect();
 
-    let mut relative: BTreeMap<_, _> = map
+    let mut relative: HashMap<_, _> = map
         .iter()
         .filter_map(|(&coord, &obj)| obj.is_beacon().then(|| coord))
         .flat_map(|reference_beacon| {
