@@ -1,5 +1,6 @@
 use aoc_runner_derive::*;
 use itertools::Itertools;
+use rayon::prelude::*;
 
 #[aoc_generator(day21)]
 fn gen(input: &str) -> (usize, usize) {
@@ -53,24 +54,31 @@ fn play_turn(turn: usize, active: State, other: State) -> (usize, usize) {
     //    .collect_vec();
     let dice = [(3, 1), (9, 1), (4, 3), (8, 3), (7, 6), (5, 6), (6, 7)];
 
-    dice.into_iter()
-        .map(move |(dice, freq)| {
-            // compute current player's score
-            let pos = (((active.0 - 1) + dice) % 10) + 1;
-            let score = active.1 + pos;
+    let process = move |(dice, freq)| {
+        // compute current player's score
+        let pos = (((active.0 - 1) + dice) % 10) + 1;
+        let score = active.1 + pos;
 
-            // if current player won account for victory.
-            let victories = if score >= 21 {
-                (1, 0)
-            } else {
-                // if not then play another turn
-                let (other, active) = play_turn(turn + 1, other, (pos, score));
-                (active, other)
-            };
-            // scale by this universe's frequency.
-            (victories.0 * freq, victories.1 * freq)
-        })
-        .fold((0, 0), |acc, vic| (acc.0 + vic.0, acc.1 + vic.1))
+        // if current player won account for victory.
+        let victories = if score >= 21 {
+            (1, 0)
+        } else {
+            // if not then play another turn
+            let (other, active) = play_turn(turn + 1, other, (pos, score));
+            (active, other)
+        };
+        // scale by this universe's frequency.
+        (victories.0 * freq, victories.1 * freq)
+    };
+    if turn < 4 {
+        dice.into_par_iter()
+            .map(process)
+            .reduce(|| (0, 0), |acc, vic| (acc.0 + vic.0, acc.1 + vic.1))
+    } else {
+        dice.into_iter()
+            .map(process)
+            .fold((0, 0), |acc, vic| (acc.0 + vic.0, acc.1 + vic.1))
+    }
 }
 
 #[aoc(day21, part2)]
