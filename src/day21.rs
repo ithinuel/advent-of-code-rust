@@ -43,46 +43,6 @@ fn part1(input: &(usize, usize)) -> usize {
 // (position, score)
 type State = (usize, usize);
 fn play_turn(turn: usize, p1: State, p2: State) -> (usize, usize) {
-    let dice = [(3, 1), (9, 1), (4, 3), (8, 3), (7, 6), (5, 6), (6, 7)];
-
-    let is_p1 = turn % 2 == 0;
-    let mut victories = (0, 0);
-    let (player, other) = if is_p1 { (p1, p2) } else { (p2, p1) };
-
-    // for each distinct universe
-    for (dice, freq) in dice.into_iter() {
-        // compute current player's score
-        let pos = (((player.0 - 1) + dice) % 10) + 1;
-        let player = (pos, player.1 + pos);
-
-        // if current player won account for victory.
-        let (p1v, p2v) = if player.1 >= 21 {
-            if is_p1 {
-                (1, 0)
-            } else {
-                (0, 1)
-            }
-        } else {
-            // if not then play another turn
-            let (np1, np2) = if is_p1 {
-                (player, other)
-            } else {
-                (other, player)
-            };
-
-            // scale the victories of each player by the frequency of that universe.
-            play_turn(turn + 1, np1, np2)
-        };
-
-        // scale victories by the frequency of that universe.
-        victories.0 += p1v * freq;
-        victories.1 += p2v * freq;
-    }
-    victories
-}
-
-#[aoc(day21, part2)]
-fn part2(input: &(usize, usize)) -> usize {
     //let dice = [1..=3, 1..=3, 1..=3]
     //    .into_iter()
     //    .multi_cartesian_product()
@@ -91,6 +51,43 @@ fn part2(input: &(usize, usize)) -> usize {
     //    .into_iter()
     //    .sorted_by_key(|&(_, freq)| freq)
     //    .collect_vec();
+    let dice = [(3, 1), (9, 1), (4, 3), (8, 3), (7, 6), (5, 6), (6, 7)];
+
+    let is_p1 = turn % 2 == 0;
+    let (player, other) = if is_p1 { (p1, p2) } else { (p2, p1) };
+
+    dice.into_iter()
+        .map(move |(dice, freq)| {
+            // compute current player's score
+            let pos = (((player.0 - 1) + dice) % 10) + 1;
+            // shadowing the `player` variable is convenient!
+            let player = (pos, player.1 + pos);
+
+            // if current player won account for victory.
+            let (p1v, p2v) = if player.1 >= 21 {
+                if is_p1 {
+                    (1, 0)
+                } else {
+                    (0, 1)
+                }
+            } else {
+                // if not then play another turn
+                let (np1, np2) = if is_p1 {
+                    (player, other)
+                } else {
+                    (other, player)
+                };
+
+                // scale the victories of each player by the frequency of that universe.
+                play_turn(turn + 1, np1, np2)
+            };
+            (p1v * freq, p2v * freq)
+        })
+        .fold((0, 0), |acc, vic| (acc.0 + vic.0, acc.1 + vic.1))
+}
+
+#[aoc(day21, part2)]
+fn part2(input: &(usize, usize)) -> usize {
     let res = play_turn(0, (input.0, 0), (input.1, 0));
     usize::max(res.0, res.1)
 }
