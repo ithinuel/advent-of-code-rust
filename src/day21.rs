@@ -41,19 +41,19 @@ fn part1(input: &(usize, usize)) -> usize {
         .unwrap_err()
 }
 
+//let dice = [1..=3, 1..=3, 1..=3]
+//    .into_iter()
+//    .multi_cartesian_product()
+//    .map(|v| v.into_iter().sum::<usize>())
+//    .counts_by(|v| v)
+//    .into_iter()
+//    .sorted_by_key(|&(_, freq)| freq)
+//    .collect_vec();
+const DICE: [(usize, usize); 7] = [(3, 1), (9, 1), (4, 3), (8, 3), (7, 6), (5, 6), (6, 7)];
+
 // (position, score)
 type State = (usize, usize);
 fn play_turn(turn: usize, active: State, other: State) -> (usize, usize) {
-    //let dice = [1..=3, 1..=3, 1..=3]
-    //    .into_iter()
-    //    .multi_cartesian_product()
-    //    .map(|v| v.into_iter().sum::<usize>())
-    //    .counts_by(|v| v)
-    //    .into_iter()
-    //    .sorted_by_key(|&(_, freq)| freq)
-    //    .collect_vec();
-    let dice = [(3, 1), (9, 1), (4, 3), (8, 3), (7, 6), (5, 6), (6, 7)];
-
     let process = move |(dice, freq)| {
         // compute current player's score
         let pos = (((active.0 - 1) + dice) % 10) + 1;
@@ -71,11 +71,11 @@ fn play_turn(turn: usize, active: State, other: State) -> (usize, usize) {
         (victories.0 * freq, victories.1 * freq)
     };
     if turn < 4 {
-        dice.into_par_iter()
+        DICE.into_par_iter()
             .map(process)
             .reduce(|| (0, 0), |acc, vic| (acc.0 + vic.0, acc.1 + vic.1))
     } else {
-        dice.into_iter()
+        DICE.into_iter()
             .map(process)
             .fold((0, 0), |acc, vic| (acc.0 + vic.0, acc.1 + vic.1))
     }
@@ -84,6 +84,33 @@ fn play_turn(turn: usize, active: State, other: State) -> (usize, usize) {
 #[aoc(day21, part2)]
 fn part2(input: &(usize, usize)) -> usize {
     let res = play_turn(0, (input.0, 0), (input.1, 0));
+    usize::max(res.0, res.1)
+}
+
+#[cached::proc_macro::cached]
+fn play_turn_cached(active: State, other: State) -> (usize, usize) {
+    DICE.into_iter()
+        .map(move |(dice, freq)| {
+            // compute current player's score
+            let pos = (((active.0 - 1) + dice) % 10) + 1;
+            let score = active.1 + pos;
+
+            // if current player won account for victory.
+            let victories = if score >= 21 {
+                (1, 0)
+            } else {
+                // if not then play another turn
+                let (other, active) = play_turn_cached(other, (pos, score));
+                (active, other)
+            };
+            // scale by this universe's frequency.
+            (victories.0 * freq, victories.1 * freq)
+        })
+        .fold((0, 0), |acc, vic| (acc.0 + vic.0, acc.1 + vic.1))
+}
+#[aoc(day21, part2, cached)]
+fn part2_cached(input: &(usize, usize)) -> usize {
+    let res = play_turn_cached((input.0, 0), (input.1, 0));
     usize::max(res.0, res.1)
 }
 
@@ -99,5 +126,12 @@ Player 2 starting position: 8";
     #[test]
     fn part2() {
         assert_eq!(444_356_092_776_315, super::part2(&super::gen(EXAMPLE)));
+    }
+    #[test]
+    fn part2_cached() {
+        assert_eq!(
+            444_356_092_776_315,
+            super::part2_cached(&super::gen(EXAMPLE))
+        );
     }
 }
