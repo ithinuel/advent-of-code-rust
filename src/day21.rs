@@ -42,7 +42,7 @@ fn part1(input: &(usize, usize)) -> usize {
 
 // (position, score)
 type State = (usize, usize);
-fn play_turn(turn: usize, p1: State, p2: State) -> (usize, usize) {
+fn play_turn(turn: usize, active: State, other: State) -> (usize, usize) {
     //let dice = [1..=3, 1..=3, 1..=3]
     //    .into_iter()
     //    .multi_cartesian_product()
@@ -53,35 +53,22 @@ fn play_turn(turn: usize, p1: State, p2: State) -> (usize, usize) {
     //    .collect_vec();
     let dice = [(3, 1), (9, 1), (4, 3), (8, 3), (7, 6), (5, 6), (6, 7)];
 
-    let is_p1 = turn % 2 == 0;
-    let (player, other) = if is_p1 { (p1, p2) } else { (p2, p1) };
-
     dice.into_iter()
         .map(move |(dice, freq)| {
             // compute current player's score
-            let pos = (((player.0 - 1) + dice) % 10) + 1;
-            // shadowing the `player` variable is convenient!
-            let player = (pos, player.1 + pos);
+            let pos = (((active.0 - 1) + dice) % 10) + 1;
+            let score = active.1 + pos;
 
             // if current player won account for victory.
-            let (p1v, p2v) = if player.1 >= 21 {
-                if is_p1 {
-                    (1, 0)
-                } else {
-                    (0, 1)
-                }
+            let victories = if score >= 21 {
+                (1, 0)
             } else {
                 // if not then play another turn
-                let (np1, np2) = if is_p1 {
-                    (player, other)
-                } else {
-                    (other, player)
-                };
-
-                // scale the victories of each player by the frequency of that universe.
-                play_turn(turn + 1, np1, np2)
+                let (other, active) = play_turn(turn + 1, other, (pos, score));
+                (active, other)
             };
-            (p1v * freq, p2v * freq)
+            // scale by this universe's frequency.
+            (victories.0 * freq, victories.1 * freq)
         })
         .fold((0, 0), |acc, vic| (acc.0 + vic.0, acc.1 + vic.1))
 }
