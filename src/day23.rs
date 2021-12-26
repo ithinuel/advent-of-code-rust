@@ -10,35 +10,29 @@ fn gen(input: &str) -> Burrow<2> {
 
 #[aoc(day23, part1)]
 fn part1(burrow: &Burrow<2>) -> Option<usize> {
-    solve2(burrow.clone())
-        .into_iter()
-        .min_by_key(|&(k, _)| k)
-        .map(|(k, v)| {
-            let mut burrow = burrow.clone();
-            v.into_iter().rev().for_each(|mv| {
-                burrow.apply(&mv);
-                println!("{:?}", mv);
-                println!("{:?}", burrow);
-            });
-            k
-        })
+    solve2(burrow.clone()).map(|(k, v)| {
+        let mut burrow = burrow.clone();
+        v.into_iter().rev().for_each(|mv| {
+            burrow.apply(&mv);
+            println!("{:?}", mv);
+            println!("{:?}", burrow);
+        });
+        k
+    })
 }
 
 #[aoc(day23, part2)]
 fn part2(burrow: &Burrow<2>) -> Option<usize> {
     let burrow = Burrow::<4>::from(burrow);
-    solve4(burrow.clone())
-        .into_iter()
-        .min_by_key(|&(k, _)| k)
-        .map(|(k, v)| {
-            let mut burrow = burrow.clone();
-            v.into_iter().rev().for_each(|mv| {
-                burrow.apply(&mv);
-                println!("{:?}: {}", mv, mv.cost());
-                println!("{:?}", burrow);
-            });
-            k
-        })
+    solve4(burrow.clone()).map(|(k, v)| {
+        let mut burrow = burrow.clone();
+        v.into_iter().rev().for_each(|mv| {
+            burrow.apply(&mv);
+            println!("{:?}: {}", mv, mv.cost());
+            println!("{:?}", burrow);
+        });
+        k
+    })
 }
 
 #[cfg(test)]
