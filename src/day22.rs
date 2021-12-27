@@ -36,6 +36,7 @@ impl Block {
     /// memory.
     fn split_in_halves(self) -> impl Iterator<Item = Self> {
         use either::Either::{self, *};
+        #[allow(clippy::type_complexity)]
         fn split_axis((min, max): (i64, i64)) -> Either<Option<(i64, i64)>, [(i64, i64); 2]> {
             let diff = max - min + 1;
             if diff == 1 {
@@ -46,7 +47,7 @@ impl Block {
             }
         }
 
-        let Block { x, y, z } = self.clone();
+        let Block { x, y, z } = self;
         split_axis(x)
             .into_iter()
             .cartesian_product(split_axis(y).into_iter())
@@ -170,7 +171,7 @@ fn part2(instrs: &[Command]) -> usize {
     // the map does not require extra features (like HashSet/BTreeSet would provide).
     // All the required features are guaranteed by the algorithm.
     let mut map: Vec<Block> = Vec::new();
-    for (action, new_block) in instrs.into_iter() {
+    for (action, new_block) in instrs {
         map = map
             .into_iter()
             .flat_map(|block| {
@@ -190,7 +191,7 @@ fn part2(instrs: &[Command]) -> usize {
             })
             .collect();
         if *action {
-            map.push(new_block.clone());
+            map.push(*new_block);
         }
     }
     map.into_iter().map(|block| block.volume() as usize).sum()
