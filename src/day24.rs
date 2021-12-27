@@ -21,62 +21,24 @@ fn gen(input: &str) -> Option<Vec<Instr>> {
 
 fn parse_reg(input: &str) -> IResult<&str, Reg> {
     use nom::character::complete::char;
-    map(
-        alt((char('x'), char('y'), char('z'), char('w'))),
-        |c| match c {
-            'x' => Reg::X,
-            'y' => Reg::Y,
-            'z' => Reg::Z,
-            'w' => Reg::W,
-            _ => {
-                unreachable!()
-            }
-        },
-    )(input)
+    alt((
+        map(char('x'), |_| Reg::X),
+        map(char('y'), |_| Reg::Y),
+        map(char('z'), |_| Reg::Z),
+        map(char('w'), |_| Reg::W),
+    ))(input)
 }
 fn parse_imm(input: &str) -> IResult<&str, isize> {
     use nom::character::complete::char;
-    let (rest, (sign, value)) = tuple((
-        opt(char('-')),
-        map_res(digit1, |value| isize::from_str_radix(value, 10)),
-    ))(input)?;
-    let value = if sign.is_some() { -1 } else { 1 } * value;
-    Ok((rest, value))
+    map_res(tuple((opt(char('-')), digit1)), |(sign, value)| {
+        isize::from_str_radix(value, 10).map(|v| if sign.is_some() { -1 } else { 1 } * v)
+    })(input)
 }
-fn parse_op2(input: &str) -> IResult<&str, Op2> {
-    alt((map(parse_reg, Op2::Reg), map(parse_imm, Op2::Imm)))(input)
-}
-fn inp(input: &str) -> IResult<&str, Instr> {
-    map(preceded(tag("inp "), parse_reg), Instr::Inp)(input)
-}
-fn add(input: &str) -> IResult<&str, Instr> {
-    map(
-        preceded(tag("add "), separated_pair(parse_reg, space1, parse_op2)),
-        |args| Instr::Add(args.0, args.1),
-    )(input)
-}
-fn mul(input: &str) -> IResult<&str, Instr> {
-    map(
-        preceded(tag("mul "), separated_pair(parse_reg, space1, parse_op2)),
-        |args| Instr::Mul(args.0, args.1),
-    )(input)
-}
-fn div(input: &str) -> IResult<&str, Instr> {
-    map(
-        preceded(tag("div "), separated_pair(parse_reg, space1, parse_op2)),
-        |args| Instr::Div(args.0, args.1),
-    )(input)
-}
-fn mod_(input: &str) -> IResult<&str, Instr> {
-    map(
-        preceded(tag("mod "), separated_pair(parse_reg, space1, parse_op2)),
-        |args| Instr::Mod(args.0, args.1),
-    )(input)
-}
-fn eql(input: &str) -> IResult<&str, Instr> {
-    map(
-        preceded(tag("eql "), separated_pair(parse_reg, space1, parse_op2)),
-        |args| Instr::Eql(args.0, args.1),
+fn parse_args(input: &str) -> IResult<&str, (Reg, Op2)> {
+    separated_pair(
+        parse_reg,
+        space1,
+        alt((map(parse_reg, Op2::Reg), map(parse_imm, Op2::Imm))),
     )(input)
 }
 
@@ -106,8 +68,18 @@ impl TryFrom<&str> for Instr {
     type Error = String;
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
-        let (_, instr) = terminated(alt((inp, add, mul, div, mod_, eql)), eof)(value)
-            .map_err(|e| format!("{:?}", e))?;
+        let (_, instr) = terminated(
+            alt((
+                map(preceded(tag("inp "), parse_reg), Instr::Inp),
+                map(preceded(tag("add "), parse_args), |(r, o)| Instr::Add(r, o)),
+                map(preceded(tag("mul "), parse_args), |(r, o)| Instr::Mul(r, o)),
+                map(preceded(tag("div "), parse_args), |(r, o)| Instr::Div(r, o)),
+                map(preceded(tag("mod "), parse_args), |(r, o)| Instr::Mod(r, o)),
+                map(preceded(tag("eql "), parse_args), |(r, o)| Instr::Eql(r, o)),
+            )),
+            eof,
+        )(value)
+        .map_err(|e| format!("{:?}", e))?;
         Ok(instr)
     }
 }
@@ -224,7 +196,6 @@ mod w 2",
     }
 
     #[test]
-    #[ignore]
     fn part1() {
         let prog = super::gen(include_str!("../input/2021/day24.txt")).expect("Invalid program");
         let mut alu = Alu::default();
