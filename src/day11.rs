@@ -68,7 +68,7 @@ fn solve(
 }
 
 #[aoc(day11, part1)]
-fn part1(map: &[Vec<char>]) -> usize {
+fn solve_part1(map: &[Vec<char>]) -> usize {
     fn adjacents(map: &[Vec<char>], coord: Coord) -> impl Iterator<Item = char> + '_ {
         DIRECTIONS
             .iter()
@@ -90,7 +90,7 @@ fn part1(map: &[Vec<char>]) -> usize {
     )
 }
 #[aoc(day11, part2)]
-fn part2(map: &[Vec<char>]) -> usize {
+fn solve_part2(map: &[Vec<char>]) -> usize {
     fn adjacents(map: &[Vec<char>], coord: Coord) -> impl Iterator<Item = char> + '_ {
         DIRECTIONS.iter().filter_map(move |&(dx, dy)| {
             (1..)
@@ -117,7 +117,7 @@ fn part2(map: &[Vec<char>]) -> usize {
 
 #[cfg(test)]
 mod test {
-    use super::{gen, part1, part2};
+    use super::{gen, solve_part1, solve_part2};
 
     const EXAMPLE: &str = r"L.LL.LL.LL
 LLLLLLL.LL
@@ -130,14 +130,14 @@ LLLLLLLLLL
 L.LLLLLL.L
 L.LLLLL.LL";
     #[test]
-    fn solve_part1() {
+    fn part1() {
         let v = gen(EXAMPLE);
-        assert_eq!(37, part1(&v))
+        assert_eq!(37, solve_part1(&v))
     }
 
     #[test]
-    fn solve_part2() {
+    fn part2() {
         let v = gen(EXAMPLE);
-        assert_eq!(26, part2(&v))
+        assert_eq!(26, solve_part2(&v))
     }
 }

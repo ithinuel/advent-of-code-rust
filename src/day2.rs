@@ -44,3 +44,20 @@ fn part2(input: &[InputType]) -> usize {
         })
         .count()
 }
+
+#[cfg(test)]
+mod test {
+    use super::{gen, part1 as solve_part1, part2 as solve_part2};
+    const EXAMPLE: &str = r"1-3 a: abcde
+1-3 b: cdefg
+2-9 c: ccccccccc";
+
+    #[test]
+    fn part1() {
+        assert_eq!(2, solve_part1(&gen(EXAMPLE)));
+    }
+    #[test]
+    fn part2() {
+        assert_eq!(1, solve_part2(&gen(EXAMPLE)));
+    }
+}

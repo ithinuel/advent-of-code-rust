@@ -87,15 +87,12 @@ fn parte2((rules, my_ticket, other_tickets): &Input) -> usize {
     other_tickets
         .iter()
         .filter(|ticket| {
-            ticket
-                .iter()
-                .find(|v| {
-                    // find a field that matches no rules
-                    !rules
-                        .iter()
-                        .any(|(_, (range_1, range_2))| range_1.contains(v) || range_2.contains(v))
-                })
-                .is_none()
+            !ticket.iter().any(|v| {
+                // find a field that matches no rules
+                !rules
+                    .iter()
+                    .any(|(_, (range_1, range_2))| range_1.contains(v) || range_2.contains(v))
+            })
         })
         .for_each(|ticket| {
             ticket.iter().enumerate().for_each(|(i, v)| {

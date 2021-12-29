@@ -68,97 +68,43 @@ fn part2(starting_values: &[usize]) -> usize {
 }
 
 #[cfg(test)]
-mod test_part1 {
-    use super::part1;
-    #[test]
-    fn test_0_3_6() {
-        assert_eq!(part1(&[0, 3, 6]), 436);
-    }
-    #[test]
-    fn test_1_3_2() {
-        assert_eq!(part1(&[1, 3, 2]), 1);
-    }
-    #[test]
-    fn test_2_1_3() {
-        assert_eq!(part1(&[2, 1, 3]), 10);
-    }
-    #[test]
-    fn test_1_2_3() {
-        assert_eq!(part1(&[1, 2, 3]), 27);
-    }
-    #[test]
-    fn test_2_3_1() {
-        assert_eq!(part1(&[2, 3, 1]), 78);
-    }
-    #[test]
-    fn test_3_2_1() {
-        assert_eq!(part1(&[3, 2, 1]), 438);
-    }
-    #[test]
-    fn test_3_1_2() {
-        assert_eq!(part1(&[3, 1, 2]), 1836);
-    }
-}
-
-#[cfg(all(test, not(debug_assertions)))]
-mod test_part2 {
-    use super::part2;
+mod test {
+    use super::part1 as solve_part1;
     use super::play_n_round;
+
+    #[cfg(not(debug_assertions))]
+    use super::part2 as solve_part2;
+
+    const EXAMPLE: [(&[usize], usize, usize); 7] = [
+        (&[0, 3, 6], 436, 175594),
+        (&[1, 3, 2], 1, 2578),
+        (&[2, 1, 3], 10, 3544142),
+        (&[1, 2, 3], 27, 261214),
+        (&[2, 3, 1], 78, 6895259),
+        (&[3, 2, 1], 438, 18),
+        (&[3, 1, 2], 1836, 362),
+    ];
+
     #[test]
-    fn test_0_3_6_2020() {
-        assert_eq!(play_n_round(&[0, 3, 6], 2020), 436);
-    }
-    #[test]
-    fn test_play_2020_round_1_3_2() {
-        assert_eq!(play_n_round(&[1, 3, 2], 2020), 1);
-    }
-    #[test]
-    fn test_play_2020_round_2_1_3() {
-        assert_eq!(play_n_round(&[2, 1, 3], 2020), 10);
-    }
-    #[test]
-    fn test_play_2020_round_1_2_3() {
-        assert_eq!(play_n_round(&[1, 2, 3], 2020), 27);
-    }
-    #[test]
-    fn test_play_2020_round_2_3_1() {
-        assert_eq!(play_n_round(&[2, 3, 1], 2020), 78);
-    }
-    #[test]
-    fn test_play_2020_round_3_2_1() {
-        assert_eq!(play_n_round(&[3, 2, 1], 2020), 438);
-    }
-    #[test]
-    fn test_play_2020_round_3_1_2() {
-        assert_eq!(play_n_round(&[3, 1, 2], 2020), 1836);
+    fn part1() {
+        for &(input, expect, _) in EXAMPLE.iter() {
+            assert_eq!(expect, solve_part1(input));
+        }
     }
 
     #[test]
-    fn test_part2_0_3_6() {
-        assert_eq!(part2(&[0, 3, 6]), 175594);
+    fn part1_alt1() {
+        for &(input, expect, _) in EXAMPLE.iter() {
+            assert_eq!(expect, play_n_round(input, 2020));
+        }
     }
+
     #[test]
-    fn test_part2_1_3_2() {
-        assert_eq!(part2(&[1, 3, 2]), 2578);
-    }
-    #[test]
-    fn test_part2_2_1_3() {
-        assert_eq!(part2(&[2, 1, 3]), 3544142);
-    }
-    #[test]
-    fn test_part2_1_2_3() {
-        assert_eq!(part2(&[1, 2, 3]), 261214);
-    }
-    #[test]
-    fn test_part2_2_3_1() {
-        assert_eq!(part2(&[2, 3, 1]), 6895259);
-    }
-    #[test]
-    fn test_part2_3_2_1() {
-        assert_eq!(part2(&[3, 2, 1]), 18);
-    }
-    #[test]
-    fn test_part2_3_1_2() {
-        assert_eq!(part2(&[3, 1, 2]), 362);
+    #[cfg(not(debug_assertions))]
+    fn part2() {
+        use rayon::prelude::*;
+        EXAMPLE.par_iter().for_each(|&(input, _, expect)| {
+            assert_eq!(expect, solve_part2(input));
+        });
     }
 }

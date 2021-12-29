@@ -66,3 +66,39 @@ fn part2(bus_lines: &[(usize, usize)]) -> usize {
 
     prods - (ts % prods)
 }
+
+#[cfg(test)]
+mod test {
+    const EXAMPLE: &str = r"939
+7,13,x,x,59,x,31,19";
+
+    const EXAMPLE_AS_ARRAY: &[(usize, usize)] = &[(0, 7), (1, 13), (4, 59), (6, 31), (7, 19)];
+    const EXAMPLE2_AS_ARRAY: &[(usize, usize)] = &[(0, 17), (2, 13), (3, 19)];
+    const EXAMPLE3_AS_ARRAY: &[(usize, usize)] = &[(0, 67), (1, 7), (2, 59), (3, 61)];
+    const EXAMPLE4_AS_ARRAY: &[(usize, usize)] = &[(0, 67), (2, 7), (3, 59), (4, 61)];
+    const EXAMPLE5_AS_ARRAY: &[(usize, usize)] = &[(0, 67), (1, 7), (3, 59), (4, 61)];
+    const EXAMPLE6_AS_ARRAY: &[(usize, usize)] = &[(0, 1789), (1, 37), (2, 47), (3, 1889)];
+
+    #[test]
+    fn part1() {
+        assert_eq!(59 * 5, super::part1(EXAMPLE));
+    }
+
+    #[test]
+    fn gen_part2() {
+        assert_eq!(
+            Some(EXAMPLE_AS_ARRAY),
+            super::gen_part2(EXAMPLE).as_ref().map(Vec::as_slice)
+        );
+    }
+
+    #[test]
+    fn part2() {
+        assert_eq!(1068781, super::part2(EXAMPLE_AS_ARRAY));
+        assert_eq!(3417, super::part2(EXAMPLE2_AS_ARRAY));
+        assert_eq!(754018, super::part2(EXAMPLE3_AS_ARRAY));
+        assert_eq!(779210, super::part2(EXAMPLE4_AS_ARRAY));
+        assert_eq!(1261476, super::part2(EXAMPLE5_AS_ARRAY));
+        assert_eq!(1202161486, super::part2(EXAMPLE6_AS_ARRAY));
+    }
+}

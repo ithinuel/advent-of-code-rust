@@ -65,3 +65,73 @@ fn part2(&(part1, ref data): &(usize, Vec<usize>)) -> Result<usize> {
         })
         .ok_or_else(|| anyhow!("Unable to find the encryption weakness"))
 }
+
+#[cfg(test)]
+mod test {
+    use lazy_static::lazy_static;
+
+    const EXAMPLE: &str = r"5
+35
+20
+15
+25
+47
+40
+62
+55
+65
+95
+102
+117
+150
+182
+127
+219
+299
+277
+309
+576";
+
+    const EXAMPLE_AS_ARRAY: &[usize] = &[
+        35, 20, 15, 25, 47, 40, 62, 55, 65, 95, 102, 117, 150, 182, 127, 219, 299, 277, 309, 576,
+    ];
+
+    lazy_static! {
+        static ref EXAMPLE_AS_PART1: (usize, (usize, Vec<usize>)) =
+            (127, (5, EXAMPLE_AS_ARRAY.to_vec()));
+        static ref EXAMPLE_AS_PART2: (usize, (usize, Vec<usize>)) =
+            (62, (127, EXAMPLE_AS_ARRAY.to_vec()));
+    }
+
+    #[test]
+    fn gen_part1() {
+        assert_eq!(
+            Some(&EXAMPLE_AS_PART1.1),
+            super::gen_part1(EXAMPLE).ok().as_ref()
+        );
+    }
+
+    #[test]
+    fn part1() {
+        assert_eq!(
+            Some(EXAMPLE_AS_PART1.0),
+            super::part1(&EXAMPLE_AS_PART1.1).ok()
+        );
+    }
+
+    #[test]
+    fn gen_part2() {
+        assert_eq!(
+            Some(&EXAMPLE_AS_PART2.1),
+            super::gen_part2(EXAMPLE).ok().as_ref()
+        );
+    }
+
+    #[test]
+    fn part2() {
+        assert_eq!(
+            Some(EXAMPLE_AS_PART2.0),
+            super::part2(&EXAMPLE_AS_PART2.1).ok()
+        );
+    }
+}

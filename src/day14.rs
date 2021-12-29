@@ -75,3 +75,26 @@ fn part2(input: &str) -> u64 {
 
     memory.values().sum()
 }
+
+#[cfg(test)]
+mod test {
+    const EXAMPLE: &str = r"mask = XXXXXXXXXXXXXXXXXXXXXXXXXXXXX1XXXX0X
+mem[8] = 11
+mem[7] = 101
+mem[8] = 0";
+
+    const EXAMPLE2: &str = r"mask = 000000000000000000000000000000X1001X
+mem[42] = 100
+mask = 00000000000000000000000000000000X0XX
+mem[26] = 1";
+
+    #[test]
+    fn part1() {
+        assert_eq!(101 + 64, super::part1(EXAMPLE));
+    }
+
+    #[test]
+    fn part2() {
+        assert_eq!(208, super::part2(EXAMPLE2));
+    }
+}

@@ -12,3 +12,6 @@ nom = "^6"
 either = "^1.6"
 aoc-runner = "*"
 aoc-runner-derive = { version = "*" }
+[dev-dependencies]
+rayon = "*"
+lazy_static = "*"

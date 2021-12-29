@@ -43,7 +43,7 @@ fn parse_rule(input: &str) -> IResult<&str, (usize, Rule)> {
 }
 
 #[aoc_generator(day19)]
-fn day19(input: &str) -> anyhow::Result<(String, HashMap<usize, Rule>)> {
+fn gen(input: &str) -> anyhow::Result<(String, HashMap<usize, Rule>)> {
     let mut input = input.split("\n\n");
     let invalid_format = || anyhow::anyhow!("Invalid input format");
 
@@ -165,4 +165,131 @@ fn part2((input, rules): &(String, HashMap<usize, Rule>)) -> usize {
 
     // apply the rules
     input.lines().filter(|line| rule0(&line).is_ok()).count()
+}
+
+#[cfg(test)]
+mod test {
+    use either::Either;
+    use lazy_static::lazy_static;
+    use std::collections::HashMap;
+
+    const EXAMPLE: &str = r#"0: 4 1 5
+1: 2 3 | 3 2
+2: 4 4 | 5 5
+3: 4 5 | 5 4
+4: "a"
+5: "b"
+
+ababbb
+bababa
+abbbab
+aaabbb
+aaaabbb"#;
+
+    const EXAMPLE_RULES: &[(usize, Either<&str, (&[usize], Option<&[usize]>)>)] = &[
+        (0, Either::Right((&[4, 1, 5], None))),
+        (1, Either::Right((&[2, 3], Some(&[3, 2])))),
+        (2, Either::Right((&[4, 4], Some(&[5, 5])))),
+        (3, Either::Right((&[4, 5], Some(&[5, 4])))),
+        (4, Either::Left("a")),
+        (5, Either::Left("b")),
+    ];
+
+    const EXAMPLE2_RULES: &[(usize, Either<&str, (&[usize], Option<&[usize]>)>)] = &[
+        (42, Either::Right((&[9, 14], Some(&[10, 1])))),
+        (9, Either::Right((&[14, 27], Some(&[1, 26])))),
+        (10, Either::Right((&[23, 14], Some(&[28, 1])))),
+        (1, Either::Left("a")),
+        (11, Either::Right((&[42, 31], None))),
+        (5, Either::Right((&[1, 14], Some(&[15, 1])))),
+        (19, Either::Right((&[14, 1], Some(&[14, 14])))),
+        (12, Either::Right((&[24, 14], Some(&[19, 1])))),
+        (16, Either::Right((&[15, 1], Some(&[14, 14])))),
+        (31, Either::Right((&[14, 17], Some(&[1, 13])))),
+        (6, Either::Right((&[14, 14], Some(&[1, 14])))),
+        (2, Either::Right((&[1, 24], Some(&[14, 4])))),
+        (0, Either::Right((&[8, 11], None))),
+        (13, Either::Right((&[14, 3], Some(&[1, 12])))),
+        (15, Either::Right((&[1], Some(&[14])))),
+        (17, Either::Right((&[14, 2], Some(&[1, 7])))),
+        (23, Either::Right((&[25, 1], Some(&[22, 14])))),
+        (28, Either::Right((&[16, 1], None))),
+        (4, Either::Right((&[1, 1], None))),
+        (20, Either::Right((&[14, 14], Some(&[1, 15])))),
+        (3, Either::Right((&[5, 14], Some(&[16, 1])))),
+        (27, Either::Right((&[1, 6], Some(&[14, 18])))),
+        (14, Either::Left("b")),
+        (21, Either::Right((&[14, 1], Some(&[1, 14])))),
+        (25, Either::Right((&[1, 1], Some(&[1, 14])))),
+        (22, Either::Right((&[14, 14], None))),
+        (8, Either::Right((&[42], None))),
+        (26, Either::Right((&[14, 22], Some(&[1, 20])))),
+        (18, Either::Right((&[15, 15], None))),
+        (7, Either::Right((&[14, 5], Some(&[1, 21])))),
+        (24, Either::Right((&[14, 1], None))),
+    ];
+
+    lazy_static! {
+        static ref EXAMPLE_AS_MAP: (String, HashMap<usize, super::Rule>) = (
+            r"ababbb
+bababa
+abbbab
+aaabbb
+aaaabbb"
+                .to_string(),
+            EXAMPLE_RULES
+                .iter()
+                .map(|(n, r)| {
+                    (
+                        *n,
+                        r.map_left(str::to_string)
+                            .map_right(|(a, b)| (a.to_vec(), b.map(Vec::from))),
+                    )
+                })
+                .collect()
+        );
+        static ref EXAMPLE2_AS_MAP: (String, HashMap<usize, super::Rule>) = (
+            r"abbbbbabbbaaaababbaabbbbabababbbabbbbbbabaaaa
+bbabbbbaabaabba
+babbbbaabbbbbabbbbbbaabaaabaaa
+aaabbbbbbaaaabaababaabababbabaaabbababababaaa
+bbbbbbbaaaabbbbaaabbabaaa
+bbbababbbbaaaaaaaabbababaaababaabab
+ababaaaaaabaaab
+ababaaaaabbbaba
+baabbaaaabbaaaababbaababb
+abbbbabbbbaaaababbbbbbaaaababb
+aaaaabbaabaaaaababaa
+aaaabbaaaabbaaa
+aaaabbaabbaaaaaaabbbabbbaaabbaabaaa
+babaaabbbaaabaababbaabababaaab
+aabbbbbaabbbaaaaaabbbbbababaaaaabbaaabba"
+                .to_string(),
+            EXAMPLE2_RULES
+                .iter()
+                .map(|(n, r)| {
+                    (
+                        *n,
+                        r.map_left(str::to_string)
+                            .map_right(|(a, b)| (a.to_vec(), b.map(Vec::from))),
+                    )
+                })
+                .collect()
+        );
+    }
+
+    #[test]
+    fn gen() {
+        assert_eq!(Some(&*EXAMPLE_AS_MAP), super::gen(EXAMPLE).ok().as_ref());
+    }
+
+    #[test]
+    fn part1() {
+        assert_eq!(2, super::part1(&EXAMPLE_AS_MAP));
+    }
+
+    #[test]
+    fn part2() {
+        assert_eq!(12, super::part2(&EXAMPLE2_AS_MAP));
+    }
 }
