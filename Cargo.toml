@@ -15,7 +15,7 @@ aoc-runner-derive = { version = "*" }
 bitvec = "0.22"
 rayon = "*"
 num = "0.4"
-#nalgebra = "*"
+bimap = "*"
 
 [dev-dependencies]
 rayon = "*"
