@@ -19,7 +19,7 @@ fn part1(input: &str) -> u64 {
             });
             and = !not_and;
         } else {
-            let caps = re.captures(&line).expect("invalid mem fmt");
+            let caps = re.captures(line).expect("invalid mem fmt");
             let addr: u64 = caps[1].parse().expect("invalid mem address fmt");
             let val: u64 = caps[2].parse().expect("invalid mem value fmt");
 
@@ -60,7 +60,7 @@ fn part2(input: &str) -> u64 {
         if line.starts_with("mask") {
             mask = line.split_at(7).1;
         } else {
-            let caps = re.captures(&line).expect("invalid mem fmt");
+            let caps = re.captures(line).expect("invalid mem fmt");
             let addr: u64 = caps[1].parse().expect("invalid mem address fmt");
             let val: u64 = caps[2].parse().expect("invalid mem value fmt");
 

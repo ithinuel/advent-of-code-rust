@@ -51,7 +51,7 @@ fn gen(input: &str) -> anyhow::Result<(String, HashMap<usize, Rule>)> {
         .next()
         .ok_or_else(invalid_format)?
         .lines()
-        .map(|line| parse_rule(&line).expect("Invalid rule").1)
+        .map(|line| parse_rule(line).expect("Invalid rule").1)
         .collect();
     let messages = input.next().ok_or_else(invalid_format)?.to_string();
     Ok((messages, rules))
@@ -94,10 +94,10 @@ fn into_regex_internal(
 #[aoc(day19, part1)]
 fn part1((input, rules): &(String, HashMap<usize, Rule>)) -> usize {
     let mut cache = HashMap::new();
-    let regexp = format!("^{}$", into_regex_internal(&rules, &mut cache, 0));
+    let regexp = format!("^{}$", into_regex_internal(rules, &mut cache, 0));
     let re = regex::Regex::new(&regexp).unwrap();
 
-    input.lines().filter(|line| re.is_match(&line)).count()
+    input.lines().filter(|line| re.is_match(line)).count()
 }
 
 fn into_nom_parser(
@@ -106,10 +106,7 @@ fn into_nom_parser(
 ) -> impl FnMut(&str) -> IResult<&str, ()> + '_ {
     let rule = &rules[&id];
     move |input| match rule {
-        Either::Left(ref s) => {
-            let s: &str = &s;
-            map(tag(s), |_| ())(input)
-        }
+        Either::Left(ref s) => map(tag(s.as_str()), |_| ())(input),
         Either::Right((ref subrule, None)) => {
             subrule.iter().try_fold((input, ()), |(input, _), &id| {
                 into_nom_parser(rules, id)(input)
@@ -141,14 +138,14 @@ fn part2((input, rules): &(String, HashMap<usize, Rule>)) -> usize {
                 Either::Right((subrule, None)) => subrule.iter().any(|id| magic_rules.contains(id)),
                 Either::Right((subrule1, Some(subrule2))) => {
                     subrule1.iter().any(|id| magic_rules.contains(id))
-                        || subrule2.iter().any(|id| magic_rules.contains(&id))
+                        || subrule2.iter().any(|id| magic_rules.contains(id))
                 }
             }
         }));
 
     // get parsers.
-    let mut rule42 = into_nom_parser(&rules, 42);
-    let mut rule31 = into_nom_parser(&rules, 31);
+    let mut rule42 = into_nom_parser(rules, 42);
+    let mut rule31 = into_nom_parser(rules, 31);
     let mut rule0 = |input| -> IResult<&str, ()> {
         // the only occurence of rule 8 and 11 are in rule 0 with 0: 8 11
         // so we pack together rule 0, 8, and 11
@@ -164,7 +161,7 @@ fn part2((input, rules): &(String, HashMap<usize, Rule>)) -> usize {
     };
 
     // apply the rules
-    input.lines().filter(|line| rule0(&line).is_ok()).count()
+    input.lines().filter(|line| rule0(line).is_ok()).count()
 }
 
 #[cfg(test)]

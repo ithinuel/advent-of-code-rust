@@ -30,7 +30,7 @@ fn part2(adapters: &[usize]) -> u64 {
         edges.entry(a).or_insert_with(Vec::new).extend(
             (1..4)
                 .map(|n| a + n)
-                .filter(|b| adapters.binary_search(&b).is_ok()),
+                .filter(|b| adapters.binary_search(b).is_ok()),
         );
     });
 

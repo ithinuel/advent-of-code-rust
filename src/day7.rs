@@ -22,7 +22,7 @@ fn gen(input: &str) -> anyhow::Result<RuleMap> {
                 .ok_or_else(|| anyhow!("invalid bag name"))?;
 
             let children = re
-                .captures_iter(&l)
+                .captures_iter(l)
                 .filter_map(|c| {
                     c.iter()
                         .flat_map(|m| m.into_iter())

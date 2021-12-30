@@ -29,6 +29,7 @@ fn gen(input: &str) -> Option<HashMap<u32, Tile>> {
 enum RebuildError {
     EmptyTileMap,
 }
+#[allow(clippy::type_complexity)]
 fn rebuild_map(
     tiles: &HashMap<u32, Tile>,
 ) -> Result<HashMap<(i32, i32), (u32, Rotation, Flip)>, RebuildError> {

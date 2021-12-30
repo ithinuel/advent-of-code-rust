@@ -145,10 +145,10 @@ fn _part2(input: &str) -> usize {
                     .map(move |(dw, (dz, (dy, dx)))| (w - dw, z + dz, y + dy, x + dx))
                     .filter(|(w, z, y, x)| {
                         universe
-                            .get(&w)
-                            .and_then(|vol3d| vol3d.get(&z))
-                            .and_then(|plane| plane.get(&y))
-                            .map(|line| line.contains(&x))
+                            .get(w)
+                            .and_then(|vol3d| vol3d.get(z))
+                            .and_then(|plane| plane.get(y))
+                            .map(|line| line.contains(x))
                             .unwrap_or(false)
                     })
                     .count();
