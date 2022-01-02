@@ -102,8 +102,8 @@ fn part1(universe: &Universe3D) -> usize {
         .sum()
 }
 
-//#[aoc(day17, part2)]
-fn _part2(input: &str) -> usize {
+#[aoc(day17, part2)]
+fn part2(input: &str) -> usize {
     type Universe4D = BTreeMap<isize, BTreeMap<isize, BTreeMap<isize, BTreeSet<isize>>>>;
     let mut universe: Universe4D = once((0isize, gen_part1(input))).collect();
     let cube =
@@ -277,8 +277,8 @@ mod test {
     }
 
     #[test]
-    fn _part2() {
-        assert_eq!(848, super::_part2(EXAMPLE));
+    fn part2() {
+        assert_eq!(848, super::part2(EXAMPLE));
     }
 
     #[test]

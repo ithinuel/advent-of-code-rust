@@ -5,18 +5,18 @@ authors = ["Wilfried Chauveau"]
 edition = "2021"
 
 [dependencies]
-anyhow = "*"
-regex = "^1.4"
-itertools = "^0"
-nom = "^7"
-either = "^1.6"
-aoc-runner = "*"
-aoc-runner-derive = { version = "*" }
+anyhow = "1.0.0"
+aoc-runner = "0.3"
+aoc-runner-derive = "0.3"
+bimap = "0.6.1"
 bitvec = "0.22"
-rayon = "*"
+either = "1.6"
+itertools = "0.10"
+nom = "7"
 num = "0.4"
-bimap = "*"
+rayon = "1.5.1"
+regex = "1.4"
 
 [dev-dependencies]
-rayon = "*"
-lazy_static = "*"
+lazy_static = "1.4"
+
