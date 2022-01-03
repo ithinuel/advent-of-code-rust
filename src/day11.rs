@@ -1,6 +1,6 @@
-use std::io::stdin;
 use std::cmp::max;
 use std::cmp::min;
+use std::io::stdin;
 
 #[derive(Debug)]
 struct Path {
@@ -9,7 +9,7 @@ struct Path {
     n: usize,
     se: usize,
     sw: usize,
-    s: usize
+    s: usize,
 }
 
 impl Path {
@@ -20,10 +20,10 @@ impl Path {
             n: s.iter().filter(|d| d == &&"n").count(),
             se: s.iter().filter(|d| d == &&"se").count(),
             sw: s.iter().filter(|d| d == &&"sw").count(),
-            s: s.iter().filter(|d| d == &&"s").count()
+            s: s.iter().filter(|d| d == &&"s").count(),
         }
     }
-   
+
     fn add_and_reduce(&mut self, dir: &str) {
         match dir {
             "ne" => self.ne += 1,
@@ -32,7 +32,7 @@ impl Path {
             "se" => self.se += 1,
             "sw" => self.sw += 1,
             "s" => self.s += 1,
-            _ => panic!("invalid dir")
+            _ => panic!("invalid dir"),
         }
         self.reduce();
     }
@@ -113,7 +113,7 @@ impl Path {
 fn main() {
     let mut input = String::new();
     stdin().read_line(&mut input).unwrap();
-    let v: Vec<&str> = input.trim().split(",").collect();
+    let v: Vec<&str> = input.trim().split(',').collect();
 
     let mut _max = 0;
     let mut p = Path::new(&[]);

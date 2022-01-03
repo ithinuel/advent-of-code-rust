@@ -1,9 +1,9 @@
 extern crate regex;
 
+use std::cmp::max;
+use std::collections::BTreeMap;
 use std::io::stdin;
 use std::io::Read;
-use std::collections::BTreeMap;
-use std::cmp::max;
 
 use regex::Regex;
 
@@ -12,7 +12,7 @@ fn main() {
     let _ = stdin().read_to_string(&mut prgm);
 
     let re = Regex::new(r"(?P<output>\w+) (?P<action>inc|dec) (?P<op>-?\d+) if (?P<cond>\w+) (?P<test><|<=|>|>=|==|!=) (?P<val>-?\d+)").unwrap();
-    
+
     let mut regs: BTreeMap<String, i32> = BTreeMap::new();
     let mut max_value = 0;
 
@@ -27,7 +27,7 @@ fn main() {
                 ">=" => cond >= val,
                 "==" => cond == val,
                 "!=" => cond != val,
-                _ => panic!("Invalid operand")
+                _ => panic!("Invalid operand"),
             }
         };
 
@@ -37,7 +37,7 @@ fn main() {
             match &cap["action"] {
                 "inc" => *output += val,
                 "dec" => *output -= val,
-                _ => panic!("Invalid instruction")
+                _ => panic!("Invalid instruction"),
             }
 
             max_value = max(max_value, *output);

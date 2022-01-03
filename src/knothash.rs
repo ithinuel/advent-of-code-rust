@@ -4,7 +4,7 @@ pub struct KnotHash {
     lengths: Vec<usize>,
     array: Vec<u8>,
     skip_size: usize,
-    cur_pos: usize
+    cur_pos: usize,
 }
 
 impl KnotHash {
@@ -13,7 +13,7 @@ impl KnotHash {
             lengths: bytes.to_vec(),
             array: (0..len).map(|n| n as u8).collect(),
             skip_size: 0,
-            cur_pos: 0
+            cur_pos: 0,
         }
     }
 
@@ -34,7 +34,7 @@ impl KnotHash {
             self.skip_size += 1;
         }
     }
-    
+
     pub fn get_sparse_hash(&self) -> Vec<u8> {
         self.swap_slice_at(self.array.len() - self.cur_pos)
     }
@@ -42,7 +42,7 @@ impl KnotHash {
     pub fn get_dense_hash_as_vec(&self) -> Vec<u8> {
         self.get_sparse_hash()
             .chunks(16)
-            .map(|c| c.iter().fold(0, |x, v| x^v))
+            .map(|c| c.iter().fold(0, |x, v| x ^ v))
             .collect()
     }
 
@@ -65,4 +65,3 @@ impl Display for KnotHash {
         write!(f, "{}", self.get_dense_hash_as_string())
     }
 }
-

@@ -1,32 +1,32 @@
-use std::io::stdin;
 use std::collections::BTreeSet;
+use std::io::stdin;
 
 fn main() {
     let mut line = String::new();
-    if let Ok(_) = stdin().read_line(&mut line) {
+    if stdin().read_line(&mut line).is_ok() {
         let mut v: Vec<u32> = line
             .trim()
-            .split("\t")
-            .map(|n| {
-                n.parse().unwrap()
-            })
+            .split('\t')
+            .map(|n| n.parse().unwrap())
             .collect();
         let mut s = BTreeSet::new();
 
         let mut iter_count = 0;
         while !s.contains(&v) {
             s.insert(v.clone());
-            
+
             // find the index of the biggest bank
-            let (mut idx, _) = v.iter()
-                .enumerate()
-                .fold((0, 0), |prev, (idx, val)| {
-                    if *val > prev.1 {
-                        (idx, *val)
-                    } else {
-                        prev
-                    }
-                });
+            let (mut idx, _) =
+                v.iter().enumerate().fold(
+                    (0, 0),
+                    |prev, (idx, val)| {
+                        if *val > prev.1 {
+                            (idx, *val)
+                        } else {
+                            prev
+                        }
+                    },
+                );
             let mut blocks = v[idx];
             v[idx] = 0;
             while blocks > 0 {

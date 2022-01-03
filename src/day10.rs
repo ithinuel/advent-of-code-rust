@@ -13,13 +13,17 @@ fn swap_slice_at(v: &Array, at: usize) -> Array {
 
 fn print(v: &Array, at: usize) {
     let v2 = swap_slice_at(v, v.len() - at);
-    let p: Vec<String> = v2.iter()
+    let p: Vec<String> = v2
+        .iter()
         .enumerate()
-        .map(|(i, n)| if i == at {
-            format!("[{}]", n)
-        } else {
-            format!("{}", n)
-        }).collect();
+        .map(|(i, n)| {
+            if i == at {
+                format!("[{}]", n)
+            } else {
+                format!("{}", n)
+            }
+        })
+        .collect();
     println!("[{}]", p.join(","));
 }
 
@@ -34,11 +38,12 @@ fn main() {
 
     input.clear();
     stdin().read_line(&mut input).unwrap();
-    let sizes: Vec<usize> = input.trim().split(",")
-        .map(|c| {
-            c.parse().unwrap()
-        }).collect();
-    
+    let sizes: Vec<usize> = input
+        .trim()
+        .split(',')
+        .map(|c| c.parse().unwrap())
+        .collect();
+
     let mut skip_size: usize = 0;
     let mut cur_pos = 0;
     //print(&v, skip_size);

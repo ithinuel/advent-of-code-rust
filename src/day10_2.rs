@@ -15,7 +15,8 @@ fn main() {
     input.clear();
 
     stdin().read_line(&mut input).unwrap();
-    let mut sizes: Vec<usize> = input.trim()
+    let mut sizes: Vec<usize> = input
+        .trim()
         .as_bytes()
         .iter()
         .map(|b| *b as usize)
@@ -24,7 +25,7 @@ fn main() {
     sizes.extend_from_slice(&[17, 31, 73, 47, 23]);
 
     println!("lengths: {:?}", sizes);
-    
+
     let mut kh = KnotHash::new(&sizes, len);
     for _ in 0..64 {
         kh.round();

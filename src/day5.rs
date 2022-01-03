@@ -2,11 +2,12 @@ use std::io::{stdin, BufRead};
 
 fn main() {
     let input = stdin();
-    let mut program: Vec<i32> = input.lock()
+    let mut program: Vec<i32> = input
+        .lock()
         .lines()
         .map(|l| l.unwrap().parse().unwrap())
         .collect();
-   
+
     let mut steps = 0;
     let mut program_counter = 0;
     println!("{:?}", program);

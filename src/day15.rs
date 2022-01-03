@@ -3,7 +3,7 @@ use std::io::BufRead;
 
 struct Generator {
     factor: u64,
-    value: u64
+    value: u64,
 }
 
 impl Iterator for Generator {
@@ -20,23 +20,25 @@ impl Iterator for Generator {
 
 fn main() {
     let input = stdin();
-    let seeds: Vec<u64> = input.lock()
+    let seeds: Vec<u64> = input
+        .lock()
         .lines()
-        .map(|l| l.unwrap()
-             .split(" ")
-             .last()
-             .unwrap()
-             .parse()
-             .unwrap())
+        .map(|l| l.unwrap().split(' ').last().unwrap().parse().unwrap())
         .collect();
 
-    let mut a = Generator { factor: 16807, value: seeds[0] };
-    let mut b = Generator { factor: 48271, value: seeds[1] };
+    let mut a = Generator {
+        factor: 16807,
+        value: seeds[0],
+    };
+    let mut b = Generator {
+        factor: 48271,
+        value: seeds[1],
+    };
     //println!("--Gen. A--  --Gen. B--");
     //for _ in 0..5 {
     //    println!("{:>10}  {:>10}", a.next().unwrap(), b.next().unwrap());
     //}
-    
+
     let matching_count = (0..40_000_000)
         .map(|_| (a.next().unwrap(), b.next().unwrap()))
         .filter(|&(an, bn)| (an & 0xFFFF) == (bn & 0xFFFF))

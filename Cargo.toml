@@ -1,7 +1,8 @@
 [package]
-name = "Advent Of Code"
+name = "Advent-Of-Code"
 version = "0.1.0"
 authors = ["Wilfried Chauveau"]
+edition = "2018"
 
 [[bin]]
 name = "day1"
@@ -171,7 +172,16 @@ path = "src/day22.rs"
 name = "day22_2"
 path = "src/day22_2.rs"
 
+[[bin]]
+name = "day24"
+path = "src/day24.rs"
+
+[[bin]]
+name = "day25"
+path = "src/day25.rs"
+
 [dependencies]
 regex = "0.2"
 nom = "^3.0.0"
 num = "^0.1.41"
+itertools = "^0"

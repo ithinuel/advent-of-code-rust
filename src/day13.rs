@@ -1,9 +1,9 @@
+use std::collections::BTreeMap;
 use std::io::stdin;
 use std::io::BufRead;
-use std::collections::BTreeMap;
 
 struct Firewall {
-    layers: BTreeMap<usize, usize>
+    layers: BTreeMap<usize, usize>,
 }
 
 impl std::fmt::Debug for Firewall {
@@ -14,16 +14,20 @@ impl std::fmt::Debug for Firewall {
 
 fn main() {
     let input = stdin();
-    let mut firewall = Firewall {
-        layers: input.lock().lines()
+    let firewall = Firewall {
+        layers: input
+            .lock()
+            .lines()
             .map(|l| {
-                let v: Vec<usize> = l.unwrap()
+                let v: Vec<usize> = l
+                    .unwrap()
                     .trim()
                     .split(": ")
                     .map(|n| n.parse().unwrap())
                     .collect();
                 (v[0], v[1])
-            }).collect()
+            })
+            .collect(),
     };
     let layers_cnt = firewall.layers.keys().max().unwrap_or(&0);
     println!("last layer = {}", layers_cnt);
@@ -32,8 +36,8 @@ fn main() {
     for i in 0..*layers_cnt {
         let depth = firewall.layers.get(&i);
         if let Some(d) = depth {
-            if (i % (d*2 - 2)) == 0 {
-                severity += i*d;
+            if (i % (d * 2 - 2)) == 0 {
+                severity += i * d;
             }
         }
     }
