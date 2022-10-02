@@ -10,8 +10,7 @@ regex = "^1.4"
 itertools = "^0"
 nom = "^7"
 either = "^1.6"
-aoc-runner = "*"
-aoc-runner-derive = { version = "*" }
+aoc-helper = { path = "../aoc-helper" }
 bitvec = "0.20"
 arrayvec = "0.7.2"
 priority-queue = "*"

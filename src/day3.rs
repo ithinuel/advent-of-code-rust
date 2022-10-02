@@ -1,4 +1,4 @@
-use aoc_runner_derive::*;
+use aoc_helper::*;
 
 fn solve_part1<const N: usize>(input: &str) -> usize {
     let mut ones_cnt = [0; N];

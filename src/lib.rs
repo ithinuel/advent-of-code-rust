@@ -1,4 +1,6 @@
-use aoc_runner_derive::*;
+use aoc_helper::*;
+
+aoc_year!(2021);
 
 mod day1;
 mod day2;
@@ -27,4 +29,4 @@ mod day23;
 mod day24;
 mod day25;
 
-aoc_lib! { year = 2021 }
+aoc_lib!();

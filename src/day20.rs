@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-use aoc_runner_derive::*;
+use aoc_helper::*;
 use itertools::Itertools;
 
 fn find_boundaries(image: &HashSet<(isize, isize)>) -> ((isize, isize), (isize, isize)) {

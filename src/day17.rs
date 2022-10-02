@@ -1,6 +1,6 @@
 use std::{collections::BTreeSet, ops::RangeInclusive};
 
-use aoc_runner_derive::*;
+use aoc_helper::*;
 use itertools::Itertools;
 
 type Input = (RangeInclusive<u32>, RangeInclusive<i32>);

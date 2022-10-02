@@ -2,7 +2,7 @@
 //! This challenge was about reverse engineering.
 //!
 #[doc = include_str!("day24/notes.md")]
-use aoc_runner_derive::*;
+use aoc_helper::*;
 
 use itertools::Itertools;
 use nom::{

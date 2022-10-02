@@ -1,4 +1,4 @@
-use aoc_runner_derive::*;
+use aoc_helper::*;
 
 type Board = Vec<Vec<(u32, bool)>>;
 

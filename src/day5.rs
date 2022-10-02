@@ -1,6 +1,6 @@
 use std::{collections::HashMap, iter::repeat};
 
-use aoc_runner_derive::*;
+use aoc_helper::*;
 use itertools::Itertools;
 
 type Parsed = Vec<((u32, u32), (u32, u32))>;

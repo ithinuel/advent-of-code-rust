@@ -1,4 +1,4 @@
-use aoc_runner_derive::*;
+use aoc_helper::*;
 use std::{cmp::Reverse, collections::BTreeMap};
 
 type Map = Vec<Vec<usize>>;

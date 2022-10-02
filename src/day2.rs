@@ -1,4 +1,4 @@
-use aoc_runner_derive::*;
+use aoc_helper::*;
 
 #[aoc_generator(day2)]
 fn gen(input: &str) -> Vec<(String, i32)> {

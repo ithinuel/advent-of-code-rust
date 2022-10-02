@@ -1,4 +1,4 @@
-use aoc_runner_derive::*;
+use aoc_helper::*;
 
 #[aoc_generator(day6, part1, bruteforce)]
 fn gen_part1_bruteforce(input: &str) -> Vec<usize> {

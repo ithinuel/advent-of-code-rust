@@ -1,4 +1,4 @@
-use aoc_runner_derive::*;
+use aoc_helper::*;
 use either::Either::{self, *};
 use itertools::Itertools;
 

@@ -2,7 +2,7 @@ use std::{collections::HashSet, hash::Hash};
 
 use arrayvec::ArrayVec;
 
-use aoc_runner_derive::*;
+use aoc_helper::*;
 use itertools::Itertools;
 
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash)]

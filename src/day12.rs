@@ -1,4 +1,4 @@
-use aoc_runner_derive::*;
+use aoc_helper::*;
 use std::collections::BTreeSet;
 
 use either::Either::*;

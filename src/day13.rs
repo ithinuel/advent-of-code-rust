@@ -1,6 +1,6 @@
 use std::{borrow::Cow, collections::BTreeSet};
 
-use aoc_runner_derive::*;
+use aoc_helper::*;
 use itertools::Itertools;
 
 type Coord = (i32, i32);
