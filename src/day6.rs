@@ -1,4 +1,4 @@
-use aoc_helper::*;
+use yaah::*;
 
 #[aoc_generator(day6, part1, bruteforce)]
 fn gen_part1_bruteforce(input: &str) -> Vec<usize> {

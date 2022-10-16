@@ -1,4 +1,4 @@
-use aoc_helper::*;
+use yaah::*;
 
 mod burrow;
 use burrow::*;
@@ -14,8 +14,8 @@ fn part1(burrow: &Burrow<2>) -> Option<usize> {
         let mut burrow = burrow.clone();
         v.into_iter().rev().for_each(|mv| {
             burrow.apply(&mv);
-            println!("{:?}", mv);
-            println!("{:?}", burrow);
+            //println!("{:?}", mv);
+            //println!("{:?}", burrow);
         });
         k
     })
@@ -28,8 +28,8 @@ fn part2(burrow: &Burrow<2>) -> Option<usize> {
         let mut burrow = burrow.clone();
         v.into_iter().rev().for_each(|mv| {
             burrow.apply(&mv);
-            println!("{:?}: {}", mv, mv.cost());
-            println!("{:?}", burrow);
+            //println!("{:?}: {}", mv, mv.cost());
+            //println!("{:?}", burrow);
         });
         k
     })

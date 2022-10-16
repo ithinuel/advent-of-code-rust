@@ -1,4 +1,4 @@
-use aoc_helper::*;
+use yaah::*;
 use itertools::Itertools;
 use std::collections::BTreeMap;
 type Gen = (Vec<u8>, BTreeMap<(u8, u8), u8>);

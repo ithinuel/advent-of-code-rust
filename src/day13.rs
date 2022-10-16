@@ -1,11 +1,11 @@
 use std::{borrow::Cow, collections::BTreeSet};
 
-use aoc_helper::*;
+use yaah::*;
 use itertools::Itertools;
 
 type Coord = (i32, i32);
 #[derive(Copy, Clone, Debug)]
-enum Fold {
+pub enum Fold {
     Col(i32),
     Line(i32),
 }
@@ -61,7 +61,7 @@ fn part1((map, instr): &Gen) -> usize {
 }
 
 #[derive(PartialEq)]
-struct Map(BTreeSet<Coord>);
+pub struct Map(BTreeSet<Coord>);
 impl std::fmt::Debug for Map {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let (max_x, max_y) = self.0.iter().fold((0, 0), |(col, line), &(x, y)| {
@@ -87,7 +87,7 @@ fn part2((map, instr): &Gen) -> Map {
     }))
 }
 
-struct BufferedMap(BTreeSet<(i32, i32)>);
+pub struct BufferedMap(BTreeSet<(i32, i32)>);
 impl std::fmt::Debug for BufferedMap {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let (max_x, max_y) = self.0.iter().fold((0, 0), |(col, line), &(x, y)| {

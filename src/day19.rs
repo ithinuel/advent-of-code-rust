@@ -1,4 +1,4 @@
-use aoc_helper::*;
+use yaah::*;
 use itertools::Itertools;
 
 mod remap;

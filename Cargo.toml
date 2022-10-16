@@ -10,14 +10,20 @@ regex = "^1.4"
 itertools = "^0"
 nom = "^7"
 either = "^1.6"
-aoc-helper = { path = "../aoc-helper" }
+yaah = { version = "0.2.0" }
 bitvec = "0.20"
 arrayvec = "0.7.2"
 priority-queue = "*"
 rayon = "*"
 cached = "*"
 lazy_static = "*"
+clap = { version = "4.0", features = ["derive"] }
+criterion = "0.4"
 
 [dev-dependencies]
 rayon = "*"
 lazy_static = "*"
+
+[[bench]]
+name = "aoc-bench"
+harness = false

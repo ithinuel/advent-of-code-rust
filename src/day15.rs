@@ -1,4 +1,4 @@
-use aoc_helper::*;
+use yaah::*;
 use std::{cmp::Reverse, collections::BTreeMap};
 
 type Map = Vec<Vec<usize>>;

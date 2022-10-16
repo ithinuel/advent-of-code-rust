@@ -3,7 +3,7 @@ use std::{
     iter::repeat,
 };
 
-use aoc_helper::*;
+use yaah::*;
 use itertools::Itertools;
 
 #[aoc_generator(day9)]

@@ -2,7 +2,7 @@
 //! This challenge was about reverse engineering.
 //!
 #[doc = include_str!("day24/notes.md")]
-use aoc_helper::*;
+use yaah::*;
 
 use itertools::Itertools;
 use nom::{
@@ -43,20 +43,20 @@ fn parse_args(input: &str) -> IResult<&str, (Reg, Op2)> {
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
-enum Reg {
+pub enum Reg {
     X,
     Y,
     Z,
     W,
 }
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
-enum Op2 {
+pub enum Op2 {
     Reg(Reg),
     Imm(isize),
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
-enum Instr {
+pub enum Instr {
     Inp(Reg),
     Add(Reg, Op2),
     Mul(Reg, Op2),

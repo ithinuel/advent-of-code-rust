@@ -1,4 +1,4 @@
-use aoc_helper::*;
+use yaah::*;
 
 type Board = Vec<Vec<(u32, bool)>>;
 

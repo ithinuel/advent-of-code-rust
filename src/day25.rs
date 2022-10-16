@@ -1,15 +1,15 @@
 use std::collections::HashMap;
 
-use aoc_helper::*;
+use yaah::*;
 use itertools::Itertools;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum Heading {
+pub enum Heading {
     East,
     South,
 }
 
-type Map = HashMap<(usize, usize), Heading>;
+pub type Map = HashMap<(usize, usize), Heading>;
 struct Printable<'a>(&'a Map);
 impl std::fmt::Debug for Printable<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {

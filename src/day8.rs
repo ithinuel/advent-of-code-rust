@@ -1,6 +1,6 @@
 use std::collections::{HashMap, HashSet};
 
-use aoc_helper::*;
+use yaah::*;
 use itertools::Itertools;
 
 #[aoc(day8, part1)]

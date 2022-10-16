@@ -1,4 +1,4 @@
-use aoc_helper::*;
+use yaah::*;
 
 aoc_year!(2021);
 
@@ -29,4 +29,4 @@ mod day23;
 mod day24;
 mod day25;
 
-aoc_lib!();
+aoc_lib!(with_benchmarks);

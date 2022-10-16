@@ -1,4 +1,4 @@
-use aoc_helper::*;
+use yaah::*;
 
 #[aoc_generator(day2)]
 fn gen(input: &str) -> Vec<(String, i32)> {

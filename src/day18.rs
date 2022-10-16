@@ -1,4 +1,4 @@
-use aoc_helper::*;
+use yaah::*;
 
 mod snailfish;
 use itertools::Itertools;

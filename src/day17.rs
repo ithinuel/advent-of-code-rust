@@ -1,6 +1,6 @@
 use std::{collections::BTreeSet, ops::RangeInclusive};
 
-use aoc_helper::*;
+use yaah::*;
 use itertools::Itertools;
 
 type Input = (RangeInclusive<u32>, RangeInclusive<i32>);
@@ -9,6 +9,7 @@ type Vector = (u32, i32);
 #[aoc_generator(day17)]
 fn gen(input: &str) -> Option<Input> {
     let (x, y) = input
+        .trim()
         .trim_start_matches("target area: ")
         .split(", ")
         .next_tuple()?;

@@ -2,11 +2,11 @@ use std::{collections::HashSet, hash::Hash};
 
 use arrayvec::ArrayVec;
 
-use aoc_helper::*;
+use yaah::*;
 use itertools::Itertools;
 
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash)]
-struct Block {
+pub struct Block {
     x: (i64, i64),
     y: (i64, i64),
     z: (i64, i64),
@@ -111,7 +111,7 @@ impl From<Tuples> for Block {
 }
 
 type Tuples = ((i64, i64), (i64, i64), (i64, i64));
-type Command = (bool, Block);
+pub type Command = (bool, Block);
 
 #[aoc_generator(day22)]
 fn gen(input: &str) -> Vec<Command> {
