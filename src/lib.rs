@@ -1,7 +1,7 @@
-use std::collections::HashSet;
+use std::{collections::HashSet, ops::RangeInclusive};
 
 use itertools::Itertools;
-use yaah::{aoc, aoc_lib, aoc_year};
+use yaah::{aoc, aoc_generator, aoc_lib, aoc_year};
 
 aoc_year!(2022);
 
@@ -96,13 +96,8 @@ fn day3_part2(input: &'static str) -> usize {
             let a: HashSet<_> = a.chars().collect();
             let b: HashSet<_> = b.chars().collect();
             let c: HashSet<_> = c.chars().collect();
-            let a_b: HashSet<_> = a.intersection(&b)
-                .cloned()
-                .collect();
-            a_b
-                .intersection(&c)
-                .cloned()
-                .last()
+            let a_b: HashSet<_> = a.intersection(&b).cloned().collect();
+            a_b.intersection(&c).cloned().last()
         })
         .map(|c| {
             (if c.is_ascii_uppercase() {
@@ -112,6 +107,50 @@ fn day3_part2(input: &'static str) -> usize {
             }) as usize
         })
         .sum()
+}
+
+type Day4List = std::iter::FilterMap<
+    std::str::Lines<'static>,
+    fn(&str) -> Option<(RangeInclusive<usize>, RangeInclusive<usize>)>,
+>;
+
+#[aoc_generator(day4)]
+fn day4(input: &'static str) -> Day4List {
+    input.lines().filter_map(|l| {
+        l.split(',')
+            .filter_map(|ranges| {
+                let (a, b): (usize, _) = ranges
+                    .split('-')
+                    .filter_map(|v| v.parse().ok())
+                    .collect_tuple()?;
+                Some(a..=b)
+            })
+            .collect_tuple()
+    })
+}
+
+#[aoc(day4, part1)]
+fn day4_part1(input: &Day4List) -> usize {
+    input
+        .clone()
+        .filter(|(a, b)| {
+            a.contains(b.start()) && a.contains(b.end())
+                || b.contains(a.start()) && b.contains(a.end())
+        })
+        .count()
+}
+
+#[aoc(day4, part2)]
+fn day4_part2(input: &Day4List) -> usize {
+    input
+        .clone()
+        .filter(|(a, b)| {
+            a.contains(b.start())
+                || a.contains(b.end())
+                || b.contains(a.start())
+                || b.contains(a.end())
+        })
+        .count()
 }
 
 #[cfg(test)]
@@ -134,12 +173,29 @@ CrZsJsPPZsGzwwsLwLmpwMDw";
 
     #[test]
     fn day3_part1() {
-        assert_eq!(157, super::day3_part1(&DAY3));
+        assert_eq!(157, super::day3_part1(DAY3));
     }
 
     #[test]
     fn day3_part2() {
-        assert_eq!(70, super::day3_part2(&DAY3));
+        assert_eq!(70, super::day3_part2(DAY3));
+    }
+
+    const DAY4: &str = r"2-4,6-8
+2-3,4-5
+5-7,7-9
+2-8,3-7
+6-6,4-6
+2-6,4-8";
+
+    #[test]
+    fn day4_part1() {
+        assert_eq!(2, super::day4_part1(&super::day4(DAY4)));
+    }
+
+    #[test]
+    fn day4_part2() {
+        assert_eq!(4, super::day4_part2(&super::day4(DAY4)));
     }
 }
 
