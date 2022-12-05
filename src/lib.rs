@@ -153,6 +153,73 @@ fn day4_part2(input: &Day4List) -> usize {
         .count()
 }
 
+#[aoc_generator(day5)]
+fn day5(input: &'static str) -> Option<(Vec<Vec<char>>, Vec<(usize, usize, usize)>)> {
+    let (stacks, instructions) = input.split("\n\n").collect_tuple()?;
+    let mut stacks = stacks
+        .lines()
+        .map(|l| l.chars().skip(1).step_by(4).collect_vec())
+        .collect_vec();
+    stacks.pop();
+    let stack_count = stacks[0].len();
+    let mut iters = stacks
+        .into_iter()
+        .rev()
+        .map(|l| l.into_iter())
+        .collect_vec();
+
+    stacks = (0..stack_count)
+        .map(|_| {
+            iters
+                .iter_mut()
+                .filter_map(|it| it.next())
+                .filter(|&c| c != ' ')
+                .collect_vec()
+        })
+        .collect_vec();
+
+    let instructions = instructions
+        .lines()
+        .filter_map(|line| {
+            line.split(' ')
+                .skip(1)
+                .step_by(2)
+                .filter_map(|v| v.parse::<usize>().ok())
+                .collect_tuple::<(_, _, _)>()
+        })
+        .collect_vec();
+
+    Some((stacks, instructions))
+}
+
+#[aoc(day5, part1)]
+fn day5_part1(input: &(Vec<Vec<char>>, Vec<(usize, usize, usize)>)) -> String {
+    let mut stacks = input.0.clone();
+    input.1.iter().for_each(|&(count, from, to)| {
+        for _ in 0..count {
+            let top = stacks[from - 1]
+                .pop()
+                .expect("empty stack, nothing to move");
+            stacks[to - 1].push(top);
+        }
+    });
+
+    stacks.iter().filter_map(|s| s.last()).collect()
+}
+
+#[aoc(day5, part2)]
+fn day5_part2(input: &(Vec<Vec<char>>, Vec<(usize, usize, usize)>)) -> String {
+    let mut stacks = input.0.clone();
+    input.1.iter().for_each(|&(count, from, to)| {
+        let from_len = stacks[from - 1].len() - count;
+        let tail = stacks[from - 1].split_off(from_len);
+        stacks[to - 1].extend(tail);
+        stacks[from - 1].truncate(from_len);
+    });
+
+    stacks.iter().filter_map(|s| s.last()).collect()
+}
+
 #[cfg(test)]
 mod tests {
     #[test]
@@ -196,6 +263,24 @@ CrZsJsPPZsGzwwsLwLmpwMDw";
     #[test]
     fn day4_part2() {
         assert_eq!(4, super::day4_part2(&super::day4(DAY4)));
+    }
+
+    const DAY5: &str = r"    [D]    
+[N] [C]    
+[Z] [M] [P]
+ 1   2   3 
+
+move 1 from 2 to 1
+move 3 from 1 to 3
+move 2 from 2 to 1
+move 1 from 1 to 2";
+
+    #[test]
+    fn day5_part1() {
+        assert_eq!(
+            "CMZ",
+            super::day5_part1(super::day5(DAY5).as_ref().unwrap())
+        );
     }
 }
 
