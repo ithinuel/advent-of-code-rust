@@ -1,4 +1,4 @@
-use std::{collections::HashSet, ops::RangeInclusive};
+use std::{collections::{HashSet, BTreeSet}, ops::RangeInclusive};
 
 use itertools::Itertools;
 use yaah::{aoc, aoc_generator, aoc_lib, aoc_year};
@@ -220,6 +220,21 @@ fn day5_part2(input: &(Vec<Vec<char>>, Vec<(usize, usize, usize)>)) -> String {
     stacks.iter().filter_map(|s| s.last()).collect()
 }
 
+#[aoc(day6, part1)]
+fn day6_part1(input: &'static str) -> Option<usize> {
+    input.chars().tuple_windows().enumerate().find_map(|(idx, (a,b,c,d))| {
+(        a !=b && a !=c && a != d && b !=c && b != d && c != d).then_some(idx + 4)
+    })
+}
+
+#[aoc(day6, part2)]
+fn day6_part2(input: &'static str) -> Option<usize> {
+    let chars = input.chars().collect_vec();
+    chars.windows(14).enumerate().find_map(|(idx, arr)| {
+        (arr.iter().cloned().collect::<BTreeSet<_>>().len() == 14).then_some(idx + 14)
+    })
+}
+
 #[cfg(test)]
 mod tests {
     #[test]
@@ -281,6 +296,23 @@ move 1 from 1 to 2";
             "CMZ",
             super::day5_part1(super::day5(DAY5).as_ref().unwrap())
         );
+    }
+
+    #[test]
+    fn day6_part1() {
+        assert_eq!(Some(7), super::day6_part1("mjqjpqmgbljsphdztnvjfqwrcgsmlb"));
+        assert_eq!(Some(5), super::day6_part1("bvwbjplbgvbhsrlpgdmjqwftvncz"));
+        assert_eq!(Some(6), super::day6_part1("nppdvjthqldpwncqszvftbrmjlhg"));
+        assert_eq!(Some(10), super::day6_part1("nznrnfrfntjfmvfwmzdfjlvtqnbhcprsg"));
+        assert_eq!(Some(11), super::day6_part1("zcfzfwzzqfrljwzlrfnpqdbhtmscgvjw"));
+    }
+    #[test]
+    fn day6_part2() {
+        assert_eq!(Some(19), super::day6_part2("mjqjpqmgbljsphdztnvjfqwrcgsmlb"));
+        assert_eq!(Some(23), super::day6_part2("bvwbjplbgvbhsrlpgdmjqwftvncz"));
+        assert_eq!(Some(23), super::day6_part2("nppdvjthqldpwncqszvftbrmjlhg"));
+        assert_eq!(Some(29), super::day6_part2("nznrnfrfntjfmvfwmzdfjlvtqnbhcprsg"));
+        assert_eq!(Some(26), super::day6_part2("zcfzfwzzqfrljwzlrfnpqdbhtmscgvjw"));
     }
 }
 
