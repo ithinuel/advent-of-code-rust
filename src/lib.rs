@@ -1,4 +1,7 @@
-use std::{collections::{HashSet, BTreeSet}, ops::RangeInclusive};
+use std::{
+    collections::{BTreeSet, HashSet},
+    ops::RangeInclusive,
+};
 
 use itertools::Itertools;
 use yaah::{aoc, aoc_generator, aoc_lib, aoc_year};
@@ -78,7 +81,6 @@ fn day3_part1(input: &'static str) -> usize {
             miss_placed.first().map(|v| **v)
         })
         .map(|c| {
-            println!("v: {c}");
             (if c.is_ascii_uppercase() {
                 (c as u8) - b'A' + 27
             } else {
@@ -222,9 +224,13 @@ fn day5_part2(input: &(Vec<Vec<char>>, Vec<(usize, usize, usize)>)) -> String {
 
 #[aoc(day6, part1)]
 fn day6_part1(input: &'static str) -> Option<usize> {
-    input.chars().tuple_windows().enumerate().find_map(|(idx, (a,b,c,d))| {
-(        a !=b && a !=c && a != d && b !=c && b != d && c != d).then_some(idx + 4)
-    })
+    input
+        .chars()
+        .tuple_windows()
+        .enumerate()
+        .find_map(|(idx, (a, b, c, d))| {
+            (a != b && a != c && a != d && b != c && b != d && c != d).then_some(idx + 4)
+        })
 }
 
 #[aoc(day6, part2)]
@@ -234,6 +240,43 @@ fn day6_part2(input: &'static str) -> Option<usize> {
         (arr.iter().cloned().collect::<BTreeSet<_>>().len() == 14).then_some(idx + 14)
     })
 }
+#[aoc(day6, part2, position)]
+fn day6_part2_position(input: &'static str) -> Option<usize> {
+    input
+        .as_bytes()
+        .windows(14)
+        .position(|arr| arr.iter().collect::<BTreeSet<_>>().len() == 14)
+        .map(|v| v + 14)
+}
+#[aoc(day6, part2, mutable)]
+fn day6_part2_mutable(input: &'static str) -> Option<usize> {
+    input
+        .as_bytes()
+        .windows(14)
+        .map(|arr| {
+            let mut vec = arr.to_owned();
+            vec.sort_unstable();
+            vec.dedup();
+            vec.len()
+        })
+        .position(|arr_len| arr_len == 14)
+        .map(|v| v + 14)
+}
+#[aoc(day6, part2, mutable_smallvec)]
+fn day6_part2_mutable_smallvec(input: &'static str) -> Option<usize> {
+    input
+        .as_bytes()
+        .windows(14)
+        .map(|arr| {
+            let mut vec: smallvec::SmallVec<[u8; 14]> = smallvec::SmallVec::from_slice(arr);
+            vec.sort_unstable();
+            vec.dedup();
+            vec.len()
+        })
+        .position(|arr_len| arr_len == 14)
+        .map(|v| v + 14)
+}
+
 
 #[cfg(test)]
 mod tests {
@@ -303,16 +346,100 @@ move 1 from 1 to 2";
         assert_eq!(Some(7), super::day6_part1("mjqjpqmgbljsphdztnvjfqwrcgsmlb"));
         assert_eq!(Some(5), super::day6_part1("bvwbjplbgvbhsrlpgdmjqwftvncz"));
         assert_eq!(Some(6), super::day6_part1("nppdvjthqldpwncqszvftbrmjlhg"));
-        assert_eq!(Some(10), super::day6_part1("nznrnfrfntjfmvfwmzdfjlvtqnbhcprsg"));
-        assert_eq!(Some(11), super::day6_part1("zcfzfwzzqfrljwzlrfnpqdbhtmscgvjw"));
+        assert_eq!(
+            Some(10),
+            super::day6_part1("nznrnfrfntjfmvfwmzdfjlvtqnbhcprsg")
+        );
+        assert_eq!(
+            Some(11),
+            super::day6_part1("zcfzfwzzqfrljwzlrfnpqdbhtmscgvjw")
+        );
     }
     #[test]
     fn day6_part2() {
-        assert_eq!(Some(19), super::day6_part2("mjqjpqmgbljsphdztnvjfqwrcgsmlb"));
+        assert_eq!(
+            Some(19),
+            super::day6_part2("mjqjpqmgbljsphdztnvjfqwrcgsmlb")
+        );
         assert_eq!(Some(23), super::day6_part2("bvwbjplbgvbhsrlpgdmjqwftvncz"));
         assert_eq!(Some(23), super::day6_part2("nppdvjthqldpwncqszvftbrmjlhg"));
-        assert_eq!(Some(29), super::day6_part2("nznrnfrfntjfmvfwmzdfjlvtqnbhcprsg"));
-        assert_eq!(Some(26), super::day6_part2("zcfzfwzzqfrljwzlrfnpqdbhtmscgvjw"));
+        assert_eq!(
+            Some(29),
+            super::day6_part2("nznrnfrfntjfmvfwmzdfjlvtqnbhcprsg")
+        );
+        assert_eq!(
+            Some(26),
+            super::day6_part2("zcfzfwzzqfrljwzlrfnpqdbhtmscgvjw")
+        );
+    }
+    #[test]
+    fn day6_part2_position() {
+        assert_eq!(
+            Some(19),
+            super::day6_part2_position("mjqjpqmgbljsphdztnvjfqwrcgsmlb")
+        );
+        assert_eq!(
+            Some(23),
+            super::day6_part2_position("bvwbjplbgvbhsrlpgdmjqwftvncz")
+        );
+        assert_eq!(
+            Some(23),
+            super::day6_part2_position("nppdvjthqldpwncqszvftbrmjlhg")
+        );
+        assert_eq!(
+            Some(29),
+            super::day6_part2_position("nznrnfrfntjfmvfwmzdfjlvtqnbhcprsg")
+        );
+        assert_eq!(
+            Some(26),
+            super::day6_part2_position("zcfzfwzzqfrljwzlrfnpqdbhtmscgvjw")
+        );
+    }
+    #[test]
+    fn day6_part2_mutable() {
+        assert_eq!(
+            Some(19),
+            super::day6_part2_mutable("mjqjpqmgbljsphdztnvjfqwrcgsmlb")
+        );
+        assert_eq!(
+            Some(23),
+            super::day6_part2_mutable("bvwbjplbgvbhsrlpgdmjqwftvncz")
+        );
+        assert_eq!(
+            Some(23),
+            super::day6_part2_mutable("nppdvjthqldpwncqszvftbrmjlhg")
+        );
+        assert_eq!(
+            Some(29),
+            super::day6_part2_mutable("nznrnfrfntjfmvfwmzdfjlvtqnbhcprsg")
+        );
+        assert_eq!(
+            Some(26),
+            super::day6_part2_mutable("zcfzfwzzqfrljwzlrfnpqdbhtmscgvjw")
+        );
+    }
+    #[test]
+    fn day6_part2_mutable_smallvec() {
+        assert_eq!(
+            Some(19),
+            super::day6_part2_mutable_smallvec("mjqjpqmgbljsphdztnvjfqwrcgsmlb")
+        );
+        assert_eq!(
+            Some(23),
+            super::day6_part2_mutable_smallvec("bvwbjplbgvbhsrlpgdmjqwftvncz")
+        );
+        assert_eq!(
+            Some(23),
+            super::day6_part2_mutable_smallvec("nppdvjthqldpwncqszvftbrmjlhg")
+        );
+        assert_eq!(
+            Some(29),
+            super::day6_part2_mutable_smallvec("nznrnfrfntjfmvfwmzdfjlvtqnbhcprsg")
+        );
+        assert_eq!(
+            Some(26),
+            super::day6_part2_mutable_smallvec("zcfzfwzzqfrljwzlrfnpqdbhtmscgvjw")
+        );
     }
 }
 
