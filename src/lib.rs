@@ -277,6 +277,7 @@ fn day6_part2_mutable_smallvec(input: &'static str) -> Option<usize> {
         .map(|v| v + 14)
 }
 
+mod day7;
 
 #[cfg(test)]
 mod tests {
