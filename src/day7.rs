@@ -1,5 +1,5 @@
 use std::{
-    collections::{hash_map::Entry, HashMap, HashSet},
+    collections::{hash_map::Entry, HashMap},
     path::{Path, PathBuf},
     str::FromStr,
 };
@@ -7,14 +7,16 @@ use std::{
 use itertools::Itertools;
 use yaah::{aoc, aoc_generator};
 
-pub type Tree = HashMap<PathBuf, Vec<String>>;
-pub type Files = HashMap<PathBuf, Vec<(usize, String)>>;
+#[derive(Default)]
+pub struct Dir {
+    dirs: Vec<String>,
+    files: Vec<usize>,
+}
+pub type Tree = HashMap<PathBuf, Dir>;
 
 #[aoc_generator(day7)]
-fn day7_gen(input: &'static str) -> (Tree, Files) {
+fn day7_gen(input: &'static str) -> Tree {
     let mut path = PathBuf::new();
-
-    let mut files = Files::new();
     let mut tree = Tree::new();
 
     for line in input.lines() {
@@ -28,73 +30,63 @@ fn day7_gen(input: &'static str) -> (Tree, Files) {
                 _ => {
                     match tree.entry(path.clone()) {
                         Entry::Vacant(entry) => {
-                            entry.insert(vec![dir.to_owned()]);
+                            entry.insert(Dir {
+                                dirs: vec![dir.to_owned()],
+                                files: vec![],
+                            });
                         }
-                        Entry::Occupied(mut entry) => entry.get_mut().push(dir.to_owned()),
+                        Entry::Occupied(mut entry) => entry.get_mut().dirs.push(dir.to_owned()),
                     }
                     path.push(dir)
                 }
             }
-        } else if line.starts_with("$ ls") {
-        } else if line.starts_with("dir ") {
+        } else if line.starts_with("$ ls") || line.starts_with("dir ") {
         } else {
-            let (size, name) = line.split(' ').collect_tuple().unwrap();
+            let (size, _name) = line.split(' ').collect_tuple().unwrap();
             let size = size.parse().unwrap();
 
-            match files.entry(path.clone()) {
+            match tree.entry(path.clone()) {
                 Entry::Vacant(entry) => {
-                    entry.insert(vec![(size, name.to_owned())]);
+                    entry.insert(Dir {
+                        dirs: vec![],
+                        files: vec![size],
+                    });
                 }
-                Entry::Occupied(mut entry) => entry.get_mut().push((size, name.to_owned())),
+                Entry::Occupied(mut entry) => entry.get_mut().files.push(size),
             }
         }
     }
-    (tree, files)
+    tree
 }
 
-fn get_size(tree: &Tree, files: &Files, path: &Path) -> usize {
+fn get_size(tree: &Tree, path: &Path) -> usize {
     tree.get(path)
-        .map(|subdirs| {
-            subdirs
+        .map(|subdir| {
+            subdir
+                .dirs
                 .iter()
                 .map(|name| {
                     let subdir = path.join(name);
-                    get_size(tree, files, &subdir)
+                    get_size(tree, &subdir)
                 })
-                .sum()
+                .sum::<usize>()
+                + subdir.files.iter().sum::<usize>()
         })
         .unwrap_or(0)
-        + files
-            .get(path)
-            .map(|files| files.iter().map(|(size, _)| size).sum())
-            .unwrap_or(0)
 }
 
 #[aoc(day7, part1)]
-fn day7_part1((tree, files): &(Tree, Files)) -> usize {
-    let dirs: HashSet<_> = files.keys().chain(tree.keys()).collect();
-
-    let sizes = dirs
-        .iter()
-        .map(|path| get_size(tree, files, path))
-        .collect_vec();
-    sizes.iter().filter(|&&a| a <= 100000).sum()
+fn day7_part1(tree: &Tree) -> usize {
+    tree.keys().map(|path| get_size(tree, path)).filter(|&a| a <= 100000).sum()
 }
 
 #[aoc(day7, part2)]
-fn day7_part2((tree, files): &(Tree, Files)) -> usize {
-    let dirs: HashSet<_> = files.keys().chain(tree.keys()).collect();
-    let sizes = dirs
-        .iter()
-        .map(|path| get_size(tree, files, path))
-        .collect_vec();
-    let used = get_size(tree, files, &PathBuf::from_str("/").unwrap());
+fn day7_part2(tree: &Tree) -> Option<usize> {
+    let used = get_size(tree, &PathBuf::from_str("/").ok()?);
     let available = 70000000 - used;
     let required = 30000000 - available;
-    //println!("{used} {available} {required}");
 
-    sizes.into_iter().filter(|&v| v >= required).min().unwrap_or(0)
-
+    tree.keys().map(|path| get_size(tree, path)).filter(|&v| v >= required).min()
 }
 
 #[cfg(test)]
@@ -124,21 +116,6 @@ $ ls
 7214296 k
 ";
 
-    const DAY7_OUT: &str = r"- / (dir)
-  - a (dir)
-    - e (dir)
-      - i (file, size=584)
-    - f (file, size=29116)
-    - g (file, size=2557)
-    - h.lst (file, size=62596)
-  - b.txt (file, size=14848514)
-  - c.dat (file, size=8504156)
-  - d (dir)
-    - j (file, size=4060174)
-    - d.log (file, size=8033020)
-    - d.ext (file, size=5626152)
-    - k (file, size=7214296)";
-
     #[test]
     fn day7_gen() {
         super::day7_gen(DAY7);
@@ -150,6 +127,6 @@ $ ls
     }
     #[test]
     fn day7_part2() {
-        assert_eq!(24933642, super::day7_part2(&super::day7_gen(DAY7)));
+        assert_eq!(Some(24933642), super::day7_part2(&super::day7_gen(DAY7)));
     }
 }
