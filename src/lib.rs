@@ -12,7 +12,7 @@ aoc_year!(2022);
 fn day1_part1(input: &'static str) -> Option<usize> {
     input
         .split("\n\n")
-        .map(|s| s.split("\n").filter_map(|v| v.parse::<usize>().ok()).sum())
+        .map(|s| s.split('\n').filter_map(|v| v.parse::<usize>().ok()).sum())
         .max()
 }
 
@@ -20,7 +20,7 @@ fn day1_part1(input: &'static str) -> Option<usize> {
 fn day1_part2(input: &'static str) -> usize {
     input
         .split("\n\n")
-        .map(|s| -> usize { s.split("\n").filter_map(|v| v.parse::<usize>().ok()).sum() })
+        .map(|s| -> usize { s.split('\n').filter_map(|v| v.parse::<usize>().ok()).sum() })
         .sorted_unstable()
         .rev()
         .take(3)
@@ -155,8 +155,10 @@ fn day4_part2(input: &Day4List) -> usize {
         .count()
 }
 
+pub type Stacks = Vec<Vec<char>>;
+pub type Instructions = Vec<(usize, usize, usize)>;
 #[aoc_generator(day5)]
-fn day5(input: &'static str) -> Option<(Vec<Vec<char>>, Vec<(usize, usize, usize)>)> {
+fn day5(input: &'static str) -> Option<(Stacks, Instructions)> {
     let (stacks, instructions) = input.split("\n\n").collect_tuple()?;
     let mut stacks = stacks
         .lines()
@@ -195,7 +197,7 @@ fn day5(input: &'static str) -> Option<(Vec<Vec<char>>, Vec<(usize, usize, usize
 }
 
 #[aoc(day5, part1)]
-fn day5_part1(input: &(Vec<Vec<char>>, Vec<(usize, usize, usize)>)) -> String {
+fn day5_part1(input: &(Stacks, Instructions)) -> String {
     let mut stacks = input.0.clone();
     input.1.iter().for_each(|&(count, from, to)| {
         for _ in 0..count {
@@ -210,7 +212,7 @@ fn day5_part1(input: &(Vec<Vec<char>>, Vec<(usize, usize, usize)>)) -> String {
 }
 
 #[aoc(day5, part2)]
-fn day5_part2(input: &(Vec<Vec<char>>, Vec<(usize, usize, usize)>)) -> String {
+fn day5_part2(input: &(Stacks, Instructions)) -> String {
     let mut stacks = input.0.clone();
     input.1.iter().for_each(|&(count, from, to)| {
         let from_len = stacks[from - 1].len() - count;
