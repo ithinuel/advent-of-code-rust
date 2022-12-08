@@ -281,6 +281,134 @@ fn day6_part2_mutable_smallvec(input: &'static str) -> Option<usize> {
 
 mod day7;
 
+#[aoc_generator(day8)]
+fn day8(input: &'static str) -> (Vec<u8>, usize) {
+    (
+        input
+            .lines()
+            .flat_map(|l| l.as_bytes().iter().map(|c| c - b'0'))
+            .collect_vec(),
+        input.lines().count(),
+    )
+}
+#[aoc(day8, part1)]
+fn day8_part1((map, size): &(Vec<u8>, usize)) -> usize {
+    let mut visible = BTreeSet::new();
+
+    // from top
+    for col in 1..(size - 1) {
+        visible.insert((col, 0));
+        let mut tallest = map[col];
+        for row in 1..(size - 1) {
+            let current = map[col + row * size];
+            if current > tallest {
+                tallest = current;
+                visible.insert((col, row));
+            }
+        }
+    }
+    // from bottom
+    for col in 1..(size - 1) {
+        let bot = size - 1;
+        visible.insert((col, bot));
+        let mut tallest = map[col + bot * size];
+        for row in (1..(size - 1)).rev() {
+            let current = map[col + row * size];
+            if current > tallest {
+                tallest = current;
+                visible.insert((col, row));
+            }
+        }
+    }
+    // from left
+    for row in 1..(size - 1) {
+        visible.insert((0, row));
+        let mut tallest = map[row * size];
+        for col in 1..(size - 1) {
+            let current = map[col + row * size];
+            if current > tallest {
+                tallest = current;
+                visible.insert((col, row));
+            }
+        }
+    }
+    // from right
+    for row in 1..(size - 1) {
+        let right = size - 1;
+        visible.insert((right, row));
+        let mut tallest = map[row * size + right];
+        for col in (1..(size - 1)).rev() {
+            let current = map[col + row * size];
+            if current > tallest {
+                tallest = current;
+                visible.insert((col, row));
+            }
+        }
+    }
+    visible.len() + 4
+}
+
+fn scenic_score(map: &Vec<u8>, size: usize, col: usize, row: usize) -> usize {
+    let orig = map[col + row * size];
+    let mut got_true = false;
+    // to top
+    let top = (0..row)
+        .rev()
+        .take_while(|row| {
+            if got_true {
+                return false;
+            }
+            got_true |= map[col + row * size] >= orig;
+            true
+        })
+        .count();
+    got_true = false;
+    let bot = (row + 1..size)
+        .take_while(|row| {
+            if got_true {
+                return false;
+            }
+            got_true |= map[col + row * size] >= orig;
+            true
+        })
+        .count();
+    got_true = false;
+    let left = (0..col)
+        .rev()
+        .take_while(|col| {
+            if got_true {
+                return false;
+            }
+            got_true |= map[col + row * size] >= orig;
+            true
+        })
+        .count();
+    got_true = false;
+    let right = (col + 1..size)
+        .take_while(|col| {
+            if got_true {
+                return false;
+            }
+            got_true |= map[col + row * size] >= orig;
+            true
+        })
+        .count();
+    let score = top * left * bot * right;
+    //println!("{col},{row}: {orig} |  {top} {left} {bot} {right}: {score}");
+    score
+}
+
+#[aoc(day8, part2)]
+fn day8_part2((map, size): &(Vec<u8>, usize)) -> Option<usize> {
+    (1..(size - 1))
+        .cartesian_product(1..(size - 1))
+        .map(|(col, row)| {
+            let score = scenic_score(map, *size, col, row);
+            score
+        })
+        .max()
+}
+
 #[cfg(test)]
 mod tests {
     #[test]
@@ -443,6 +571,21 @@ move 1 from 1 to 2";
             Some(26),
             super::day6_part2_mutable_smallvec("zcfzfwzzqfrljwzlrfnpqdbhtmscgvjw")
         );
+    }
+
+    const DAY8: &str = r"30373
+25512
+65332
+33549
+35390";
+
+    #[test]
+    fn day8_part1() {
+        assert_eq!(21, super::day8_part1(&super::day8(DAY8)));
+    }
+    #[test]
+    fn day8_part2() {
+        assert_eq!(Some(8), super::day8_part2(&super::day8(DAY8)));
     }
 }
 
