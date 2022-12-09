@@ -14,7 +14,7 @@ clap = { version = "4.0", features = ["derive"] }
 itertools = "0.10.5"
 criterion = "0.4"
 smallvec = "1.10"
-anyhow = "*"
+anyhow = "1.0"
 
 [[bench]]
 name = "aoc-bench"
