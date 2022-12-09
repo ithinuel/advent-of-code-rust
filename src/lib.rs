@@ -3,6 +3,7 @@ use std::{
     ops::RangeInclusive,
 };
 
+use anyhow::{anyhow, Error};
 use itertools::Itertools;
 use yaah::{aoc, aoc_generator, aoc_lib, aoc_year};
 
@@ -409,6 +410,135 @@ fn day8_part2((map, size): &(Vec<u8>, usize)) -> Option<usize> {
         .max()
 }
 
+fn draw(history: &HashSet<(i32, i32)>, head: (i32,i32), tail: (i32, i32)) {
+    let (min_x, max_x, min_y, max_y) = history.iter().fold((0,0,0,0), |(a,b,c,d),&(x, y)| {
+        (a.min(x), b.max(x), c.min(y), d.max(y))
+    });
+    let min_x = min_x.min(head.0);
+    let max_x = max_x.max(head.0);
+    let min_y = min_y.min(head.1);
+    let max_y = max_y.max(head.1);
+    let x_len = max_x - min_x + 1;
+    let y_len = max_y - min_y + 1;
+
+    let mut map = vec!['.'; ( x_len * y_len ) as usize];
+    let mut place_at = |(x, y), c| {
+        let coord = x - min_x + (y-min_y)*x_len;
+        map[coord as usize] = c;
+    };
+    history.iter().for_each(|&pos| {
+        place_at(pos, '#')
+    });
+
+    place_at((0,0), 's');
+    place_at(tail, 'T');
+    place_at(head, 'H');
+
+    println!();
+    println!("----------------------------");
+    println!("H: {}, {}    T: {}, {}", head.0, head.1, tail.0, tail.1);
+    println!();
+
+    map.chunks(x_len as usize).rev().for_each(|c| {
+        println!("{}", c.iter().collect::<String>());
+    });
+
+}
+fn update(head: (i32, i32), mut tail: (i32, i32)) -> (i32, i32){
+            assert!((head.0 - tail.0).abs() <= 2);
+            assert!((head.1 - tail.1).abs() <= 2);
+            if (head.0 - tail.0).abs() > 1 || (head.1 - tail.1).abs() > 1 {
+                match (head, tail) {
+                    ((a, b), (c, d)) if a > c && b == d => tail.0 += 1,
+                    ((a, b), (c, d)) if a < c && b == d => tail.0 -= 1,
+                    ((a, b), (c, d)) if a == c && b > d => tail.1 += 1,
+                    ((a, b), (c, d)) if a == c && b < d => tail.1 -= 1,
+                    ((a, b), (c, d)) if a > c && b > d => {
+                        tail.0 += 1;
+                        tail.1 += 1
+                    }
+                    ((a, b), (c, d)) if a > c && b < d => {
+                        tail.0 += 1;
+                        tail.1 -= 1
+                    }
+                    ((a, b), (c, d)) if a < c && b < d => {
+                        tail.0 -= 1;
+                        tail.1 -= 1
+                    }
+                    ((a, b), (c, d)) if a < c && b > d => {
+                        tail.0 -= 1;
+                        tail.1 += 1
+                    }
+                    (_, _) => unreachable!(),
+                }
+            }
+            tail
+}
+
+#[aoc(day9, part1)]
+fn day9_part1(input: &'static str) -> anyhow::Result<usize> {
+    let mut head = (0i32, 0i32);
+    let mut tail = (0, 0);
+    let mut history = HashSet::new();
+    history.insert(tail);
+
+    input.lines().try_for_each(|l| {
+        let (dir, steps) = l
+            .split(' ')
+            .collect_tuple()
+            .ok_or_else(|| anyhow!("Failed to parse input"))?;
+        let steps: usize = steps.parse()?;
+        for _ in 0..steps {
+            match dir {
+                "R" => head.0 += 1,
+                "U" => head.1 += 1,
+                "L" => head.0 -= 1,
+                "D" => head.1 -= 1,
+                _ => unreachable!(),
+            }
+            tail = update(head, tail);
+            history.insert(tail);
+        }
+        Ok::<(), Error>(())
+    })?;
+
+    Ok(history.len())
+}
+
+#[aoc(day9, part2)]
+fn day9_part2(input: &'static str) -> anyhow::Result<usize> {
+    let mut knots = [(0i32, 0i32); 10];
+    let mut history = HashSet::new();
+    history.insert((0,0));
+
+    input.lines().try_for_each(|l| {
+        let (dir, steps) = l
+            .split(' ')
+            .collect_tuple()
+            .ok_or_else(|| anyhow!("Failed to parse input"))?;
+        let steps: usize = steps.parse()?;
+        for _ in 0..steps {
+        let head = &mut knots[0];
+            match dir {
+                "R" => head.0 += 1,
+                "U" => head.1 += 1,
+                "L" => head.0 -= 1,
+                "D" => head.1 -= 1,
+                _ => unreachable!(),
+            }
+            for i in 1..knots.len() {
+
+            knots[i] = update(knots[i-1], knots[i]);
+            }
+
+            history.insert(*knots.last().unwrap());
+        }
+        Ok::<(), Error>(())
+    })?;
+
+    Ok(history.len())
+}
+
 #[cfg(test)]
 mod tests {
     #[test]
@@ -586,6 +716,20 @@ move 1 from 1 to 2";
     #[test]
     fn day8_part2() {
         assert_eq!(Some(8), super::day8_part2(&super::day8(DAY8)));
+    }
+
+    const DAY9: &str = r"R 4
+U 4
+L 3
+D 1
+R 4
+D 1
+L 5
+R 2";
+
+    #[test]
+    fn day9_part1() {
+        assert_eq!(Some(13), super::day9_part1(DAY9).ok());
     }
 }
 
