@@ -410,6 +410,7 @@ fn day8_part2((map, size): &(Vec<u8>, usize)) -> Option<usize> {
 }
 
 mod day9;
+mod day10;
 
 #[cfg(test)]
 mod tests {
