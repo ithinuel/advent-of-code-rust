@@ -102,7 +102,7 @@ fn simulate(
         }
         Ok::<(), Error>(())
     })?;
-    draw(&history, &rope);
+    draw(history, rope);
     Ok(())
 }
 

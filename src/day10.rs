@@ -1,4 +1,6 @@
-use smallvec::{smallvec, SmallVec};
+use std::iter::{FlatMap, Scan, Chain};
+
+use smallvec::{smallvec, SmallVec, IntoIter};
 use yaah::{aoc, aoc_generator};
 
 #[derive(Clone, Copy)]
@@ -18,16 +20,17 @@ impl std::fmt::Display for Display {
     }
 }
 
-pub type Cycles = std::iter::Chain<
-    std::option::IntoIter<(i32, i32)>,
-    std::iter::Scan<
-        std::iter::FlatMap<
+type State = (i32, i32);
+pub type Cycles = Chain<
+    std::option::IntoIter<State>,
+    Scan<
+        FlatMap<
             std::str::Lines<'static>,
-            smallvec::IntoIter<[Instr; 2]>,
-            fn(&str) -> smallvec::IntoIter<[Instr; 2]>,
+            IntoIter<[Instr; 2]>,
+            fn(&str) -> IntoIter<[Instr; 2]>,
         >,
-        (i32, i32),
-        fn(&mut (i32, i32), Instr) -> Option<(i32, i32)>,
+        State,
+        fn(&mut State, Instr) -> Option<State>,
     >,
 >;
 
@@ -42,7 +45,7 @@ fn day10(input: &'static str) -> Cycles {
         };
         seq.into_iter()
     };
-    let scanner = |state: &mut (i32, i32), instr| {
+    let scanner = |state: &mut State, instr| {
         match instr {
             Instr::Add(v) => {
                 state.0 += v;
@@ -54,8 +57,8 @@ fn day10(input: &'static str) -> Cycles {
     };
 
     // required for a reason that's not yet quite clear to me
-    let parser: fn(&str) -> smallvec::IntoIter<[Instr; 2]> = parser;
-    let scanner: fn(&mut (i32, i32), Instr) -> Option<(i32, i32)> = scanner;
+    let parser: fn(&str) -> IntoIter<[Instr; 2]> = parser;
+    let scanner: fn(&mut State, Instr) -> Option<State> = scanner;
     Some((1, 0))
         .into_iter()
         .chain(input.lines().flat_map(parser).scan((1, 0), scanner))

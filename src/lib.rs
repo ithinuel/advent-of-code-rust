@@ -348,7 +348,7 @@ fn day8_part1((map, size): &(Vec<u8>, usize)) -> usize {
     visible.len() + 4
 }
 
-fn scenic_score(map: &Vec<u8>, size: usize, col: usize, row: usize) -> usize {
+fn scenic_score(map: &[u8], size: usize, col: usize, row: usize) -> usize {
     let orig = map[col + row * size];
     let mut got_true = false;
     // to top
@@ -393,24 +393,19 @@ fn scenic_score(map: &Vec<u8>, size: usize, col: usize, row: usize) -> usize {
             true
         })
         .count();
-    let score = top * left * bot * right;
-    //println!("{col},{row}: {orig} |  {top} {left} {bot} {right}: {score}");
-    score
+    top * left * bot * right
 }
 
 #[aoc(day8, part2)]
 fn day8_part2((map, size): &(Vec<u8>, usize)) -> Option<usize> {
     (1..(size - 1))
         .cartesian_product(1..(size - 1))
-        .map(|(col, row)| {
-            let score = scenic_score(map, *size, col, row);
-            score
-        })
+        .map(|(col, row)| scenic_score(map, *size, col, row))
         .max()
 }
 
-mod day9;
 mod day10;
+mod day9;
 
 #[cfg(test)]
 mod tests {
@@ -466,6 +461,13 @@ move 1 from 2 to 1
 move 3 from 1 to 3
 move 2 from 2 to 1
 move 1 from 1 to 2";
+    const RESULTS: [(&str, usize, usize); 5] = [
+        ("mjqjpqmgbljsphdztnvjfqwrcgsmlb", 7, 19),
+        ("bvwbjplbgvbhsrlpgdmjqwftvncz", 5, 23),
+        ("nppdvjthqldpwncqszvftbrmjlhg", 6, 23),
+        ("nznrnfrfntjfmvfwmzdfjlvtqnbhcprsg", 10, 29),
+        ("zcfzfwzzqfrljwzlrfnpqdbhtmscgvjw", 11, 26),
+    ];
 
     #[test]
     fn day5_part1() {
@@ -477,103 +479,33 @@ move 1 from 1 to 2";
 
     #[test]
     fn day6_part1() {
-        assert_eq!(Some(7), super::day6_part1("mjqjpqmgbljsphdztnvjfqwrcgsmlb"));
-        assert_eq!(Some(5), super::day6_part1("bvwbjplbgvbhsrlpgdmjqwftvncz"));
-        assert_eq!(Some(6), super::day6_part1("nppdvjthqldpwncqszvftbrmjlhg"));
-        assert_eq!(
-            Some(10),
-            super::day6_part1("nznrnfrfntjfmvfwmzdfjlvtqnbhcprsg")
-        );
-        assert_eq!(
-            Some(11),
-            super::day6_part1("zcfzfwzzqfrljwzlrfnpqdbhtmscgvjw")
-        );
+        RESULTS.into_iter().for_each(|(input, res, _)| {
+            assert_eq!(Some(res), super::day6_part1(input));
+        });
     }
     #[test]
     fn day6_part2() {
-        assert_eq!(
-            Some(19),
-            super::day6_part2("mjqjpqmgbljsphdztnvjfqwrcgsmlb")
-        );
-        assert_eq!(Some(23), super::day6_part2("bvwbjplbgvbhsrlpgdmjqwftvncz"));
-        assert_eq!(Some(23), super::day6_part2("nppdvjthqldpwncqszvftbrmjlhg"));
-        assert_eq!(
-            Some(29),
-            super::day6_part2("nznrnfrfntjfmvfwmzdfjlvtqnbhcprsg")
-        );
-        assert_eq!(
-            Some(26),
-            super::day6_part2("zcfzfwzzqfrljwzlrfnpqdbhtmscgvjw")
-        );
+        RESULTS.into_iter().for_each(|(input, _, res)| {
+            assert_eq!(Some(res), super::day6_part2(input));
+        });
     }
     #[test]
     fn day6_part2_position() {
-        assert_eq!(
-            Some(19),
-            super::day6_part2_position("mjqjpqmgbljsphdztnvjfqwrcgsmlb")
-        );
-        assert_eq!(
-            Some(23),
-            super::day6_part2_position("bvwbjplbgvbhsrlpgdmjqwftvncz")
-        );
-        assert_eq!(
-            Some(23),
-            super::day6_part2_position("nppdvjthqldpwncqszvftbrmjlhg")
-        );
-        assert_eq!(
-            Some(29),
-            super::day6_part2_position("nznrnfrfntjfmvfwmzdfjlvtqnbhcprsg")
-        );
-        assert_eq!(
-            Some(26),
-            super::day6_part2_position("zcfzfwzzqfrljwzlrfnpqdbhtmscgvjw")
-        );
+        RESULTS.into_iter().for_each(|(input, _, res)| {
+            assert_eq!(Some(res), super::day6_part2_position(input));
+        });
     }
     #[test]
     fn day6_part2_mutable() {
-        assert_eq!(
-            Some(19),
-            super::day6_part2_mutable("mjqjpqmgbljsphdztnvjfqwrcgsmlb")
-        );
-        assert_eq!(
-            Some(23),
-            super::day6_part2_mutable("bvwbjplbgvbhsrlpgdmjqwftvncz")
-        );
-        assert_eq!(
-            Some(23),
-            super::day6_part2_mutable("nppdvjthqldpwncqszvftbrmjlhg")
-        );
-        assert_eq!(
-            Some(29),
-            super::day6_part2_mutable("nznrnfrfntjfmvfwmzdfjlvtqnbhcprsg")
-        );
-        assert_eq!(
-            Some(26),
-            super::day6_part2_mutable("zcfzfwzzqfrljwzlrfnpqdbhtmscgvjw")
-        );
+        RESULTS.into_iter().for_each(|(input, _, res)| {
+            assert_eq!(Some(res), super::day6_part2_mutable(input));
+        });
     }
     #[test]
     fn day6_part2_mutable_smallvec() {
-        assert_eq!(
-            Some(19),
-            super::day6_part2_mutable_smallvec("mjqjpqmgbljsphdztnvjfqwrcgsmlb")
-        );
-        assert_eq!(
-            Some(23),
-            super::day6_part2_mutable_smallvec("bvwbjplbgvbhsrlpgdmjqwftvncz")
-        );
-        assert_eq!(
-            Some(23),
-            super::day6_part2_mutable_smallvec("nppdvjthqldpwncqszvftbrmjlhg")
-        );
-        assert_eq!(
-            Some(29),
-            super::day6_part2_mutable_smallvec("nznrnfrfntjfmvfwmzdfjlvtqnbhcprsg")
-        );
-        assert_eq!(
-            Some(26),
-            super::day6_part2_mutable_smallvec("zcfzfwzzqfrljwzlrfnpqdbhtmscgvjw")
-        );
+        RESULTS.into_iter().for_each(|(input, _, res)| {
+            assert_eq!(Some(res), super::day6_part2_mutable_smallvec(input));
+        });
     }
 
     const DAY8: &str = r"30373
@@ -590,7 +522,6 @@ move 1 from 1 to 2";
     fn day8_part2() {
         assert_eq!(Some(8), super::day8_part2(&super::day8(DAY8)));
     }
-
 }
 
 aoc_lib!(with_benchmarks);
