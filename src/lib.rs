@@ -404,8 +404,10 @@ fn day8_part2((map, size): &(Vec<u8>, usize)) -> Option<usize> {
         .max()
 }
 
-mod day10;
 mod day9;
+
+mod day10;
+mod day11;
 
 #[cfg(test)]
 mod tests {
