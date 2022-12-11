@@ -1,6 +1,6 @@
-use std::iter::{FlatMap, Scan, Chain};
+use std::iter::{Chain, FlatMap, Scan};
 
-use smallvec::{smallvec, SmallVec, IntoIter};
+use smallvec::{smallvec, IntoIter, SmallVec};
 use yaah::{aoc, aoc_generator};
 
 #[derive(Clone, Copy)]
@@ -24,11 +24,7 @@ type State = (i32, i32);
 pub type Cycles = Chain<
     std::option::IntoIter<State>,
     Scan<
-        FlatMap<
-            std::str::Lines<'static>,
-            IntoIter<[Instr; 2]>,
-            fn(&str) -> IntoIter<[Instr; 2]>,
-        >,
+        FlatMap<std::str::Lines<'static>, IntoIter<[Instr; 2]>, fn(&str) -> IntoIter<[Instr; 2]>>,
         State,
         fn(&mut State, Instr) -> Option<State>,
     >,
@@ -69,7 +65,6 @@ fn day10_part1(input: &Cycles) -> i32 {
     input
         .clone()
         .filter(|(_, cycle)| (cycle % 40) == 19)
-        .inspect(|(x, c)| println!("{c}: {x}"))
         .fold(0, |signal_strength, (x, cycle)| {
             signal_strength + x * (cycle + 1)
         })
@@ -80,7 +75,6 @@ fn day10_part2(input: &Cycles) -> Display {
     let mut display = ['.'; 240];
     input.clone().take(240).for_each(|(x, c)| {
         let crt_pixel = c % 40;
-        println!("{crt_pixel} {x}");
         if ((x - 1)..=(x + 1)).contains(&crt_pixel) {
             display[(c % 240) as usize] = '#'
         }
