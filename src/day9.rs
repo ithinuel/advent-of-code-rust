@@ -34,13 +34,13 @@ fn draw(history: &HashSet<(i32, i32)>, rope: &[(i32, i32)]) {
         place_at(pos, c);
     });
 
-    println!();
-    println!("----------------------------");
-    println!();
+    //println!();
+    //println!("----------------------------");
+    //println!();
 
-    map.chunks(x_len as usize).rev().for_each(|chunk| {
-        println!("{}", String::from_utf8_lossy(chunk));
-    });
+    //map.chunks(x_len as usize).rev().for_each(|chunk| {
+    //    println!("{}", String::from_utf8_lossy(chunk));
+    //});
 }
 
 fn update(head: (i32, i32), mut tail: (i32, i32)) -> (i32, i32) {
