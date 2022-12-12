@@ -10,6 +10,7 @@ dependencies = [
  "clap 4.0.18",
  "criterion",
  "itertools",
+ "priority-queue",
  "smallvec",
  "yaah",
 ]
@@ -800,6 +801,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f9a81d2759aae1dae668f783c308bc5c8ebd191ff4184aaa1b37f65a6ae5a56f"
 dependencies = [
  "plotters-backend",
+]
+
+[[package]]
+name = "priority-queue"
+version = "1.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d7685ca4cc0b3ad748c22ce6803e23b55b9206ef7715b965ebeaf41639238fdc"
+dependencies = [
+ "autocfg",
+ "indexmap",
 ]
 
 [[package]]
