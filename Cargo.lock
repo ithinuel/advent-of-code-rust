@@ -9,6 +9,7 @@ dependencies = [
  "anyhow",
  "clap 4.0.18",
  "criterion",
+ "either",
  "itertools",
  "nom",
  "priority-queue",
